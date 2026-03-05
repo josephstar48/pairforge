@@ -4,12 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Uses your local favicon.svg file -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-
     <title>PairForge — Rooms + Realtime</title>
 
-    <!-- Supabase client (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -237,6 +234,31 @@
         .statusWarn{ color: rgba(245,158,11,.92); }
         .statusBad{ color: rgba(251,113,133,.95); }
         code.k{ background: rgba(0,0,0,.25); padding:2px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.12); }
+
+        .scheduleBox{
+            border:1px solid var(--border);
+            border-radius: 14px;
+            padding:12px;
+            background: rgba(0,0,0,.12);
+            margin-top: 10px;
+        }
+        .scheduleGrid{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap:10px;
+            margin-top:10px;
+        }
+        @media (min-width: 980px){
+            .scheduleGrid{ grid-template-columns: 1fr 1fr; }
+        }
+        .dayCard{
+            border:1px solid rgba(255,255,255,.14);
+            background: rgba(255,255,255,.06);
+            border-radius: 14px;
+            padding:12px;
+        }
+        .dayName{ font-weight:900; }
+        .pairLine{ margin-top:8px; color: rgba(255,255,255,.9); }
     </style>
 </head>
 
@@ -248,10 +270,10 @@
             <img src="pairforge-logo.svg" width="60" height="60" alt="PairForge logo">
             <div>
                 <h1>PairForge</h1>
-                <div class="subtitle">Rooms + realtime pair/mob randomizer. Share <code class="k">?room=bootcamp1</code> to collaborate.</div>
+                <div class="subtitle">Rooms + realtime pair/mob randomizer + weekly scheduler. Share <code class="k">?room=bootcamp1</code></div>
             </div>
         </div>
-        <div class="badge">⚡ Realtime Rooms • Supabase • Drag & Drop</div>
+        <div class="badge">⚡ Realtime Rooms • Supabase • Scheduler</div>
     </header>
 
     <!-- ROOM BAR -->
@@ -272,7 +294,7 @@
         <!-- LEFT -->
         <div class="card">
             <div class="sectionTitle">1) Add names</div>
-            <div class="muted">Roster changes sync to the room. Use Present/Absent to exclude someone from grouping.</div>
+            <div class="muted">Roster changes sync to the room. Use Present/Absent to exclude someone from pairing.</div>
 
             <div class="row" style="margin-top:10px;">
                 <input id="nameInput" placeholder="Type a name (e.g., Alice)" />
@@ -300,9 +322,9 @@
             </div>
 
             <div class="kpi">
-                <div class="chip">🧲 Drag & drop board</div>
                 <div class="chip">🔴 Realtime rooms</div>
-                <div class="chip">🗓️ Daily auto-rotate (per room)</div>
+                <div class="chip">🗓️ Week scheduler (pairs)</div>
+                <div class="chip">🧲 Drag & drop board</div>
             </div>
 
             <div class="divider"></div>
@@ -321,12 +343,22 @@
             <div class="row">
                 <button class="btn primary" id="generateBtn">🎯 Generate</button>
                 <button class="btn" id="rotateNowBtn">🔁 Rotate Now</button>
-                <button class="btn" id="forceDailyBtn" title="For testing">🧪 Run Daily Rotate</button>
             </div>
 
             <div class="divider"></div>
 
-            <div class="sectionTitle">3) Export</div>
+            <div class="sectionTitle">Weekly Pair Scheduler</div>
+            <div class="muted">Creates Mon–Fri rotation using a fair round-robin algorithm (pairs mode). Syncs to the room.</div>
+            <div class="row" style="margin-top:10px;">
+                <button class="btn primary" id="genWeekBtn">🗓️ Generate Week Schedule</button>
+                <button class="btn" id="copyWeekBtn">📋 Copy Schedule</button>
+                <button class="btn" id="autoWeekBtn" title="Auto-generate schedule if missing for this week">✨ Auto if Missing</button>
+            </div>
+            <div class="muted" id="weekMeta" style="margin-top:8px;"></div>
+
+            <div class="divider"></div>
+
+            <div class="sectionTitle">Export</div>
             <div class="row">
                 <button class="btn" id="exportCsvBtn">⬇️ CSV</button>
                 <button class="btn" id="exportSlackBtn">💬 Slack Message</button>
@@ -356,6 +388,15 @@
             </div>
 
             <div class="card" style="margin-top:14px;">
+                <div class="sectionTitle">Weekly Schedule (Mon–Fri)</div>
+                <div class="muted">This is what bootcamps want: predictable rotation everyone can see.</div>
+                <div class="scheduleBox">
+                    <div class="muted" id="scheduleStatus">No schedule yet for this week.</div>
+                    <div id="scheduleGrid" class="scheduleGrid"></div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:14px;">
                 <div class="row" style="justify-content:space-between;">
                     <div>
                         <div class="sectionTitle">Results</div>
@@ -382,7 +423,7 @@
 
 <script>
     // ======================================================
-    // 0) PASTE YOUR SUPABASE KEYS HERE (Settings → API)
+    // 0) Supabase Keys (Settings → Data API / API Keys)
     // ======================================================
     const SUPABASE_URL = "https://zngbgdpttaxwpcoiouer.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_uQSBmsgpROCduPskqUHB_Q_u02GLfd5";
@@ -393,7 +434,6 @@
     // Elements
     // ======================================================
     const els = {
-        // Room
         roomInput: document.getElementById('roomInput'),
         joinRoomBtn: document.getElementById('joinRoomBtn'),
         newRoomBtn: document.getElementById('newRoomBtn'),
@@ -401,7 +441,6 @@
         pushLocalBtn: document.getElementById('pushLocalBtn'),
         roomStatus: document.getElementById('roomStatus'),
 
-        // Roster + controls
         nameInput: document.getElementById('nameInput'),
         addBtn: document.getElementById('addBtn'),
         clearBtn: document.getElementById('clearBtn'),
@@ -411,18 +450,19 @@
         exportNamesBtn: document.getElementById('exportNamesBtn'),
         importBtn: document.getElementById('importBtn'),
 
-        // Grouping controls
         generateBtn: document.getElementById('generateBtn'),
         rotateNowBtn: document.getElementById('rotateNowBtn'),
-        forceDailyBtn: document.getElementById('forceDailyBtn'),
         groupMode: document.getElementById('groupMode'),
         mobSize: document.getElementById('mobSize'),
 
-        // Exports
+        genWeekBtn: document.getElementById('genWeekBtn'),
+        copyWeekBtn: document.getElementById('copyWeekBtn'),
+        autoWeekBtn: document.getElementById('autoWeekBtn'),
+        weekMeta: document.getElementById('weekMeta'),
+
         exportCsvBtn: document.getElementById('exportCsvBtn'),
         exportSlackBtn: document.getElementById('exportSlackBtn'),
 
-        // Teacher
         lockRosterBtn: document.getElementById('lockRosterBtn'),
         unlockRosterBtn: document.getElementById('unlockRosterBtn'),
         markAllPresentBtn: document.getElementById('markAllPresentBtn'),
@@ -430,7 +470,6 @@
         teacherNotes: document.getElementById('teacherNotes'),
         teacherNotesStatus: document.getElementById('teacherNotesStatus'),
 
-        // UI outputs
         names: document.getElementById('names'),
         count: document.getElementById('count'),
         results: document.getElementById('results'),
@@ -439,15 +478,17 @@
 
         saveBoardBtn: document.getElementById('saveBoardBtn'),
         resetBoardBtn: document.getElementById('resetBoardBtn'),
+
+        scheduleStatus: document.getElementById('scheduleStatus'),
+        scheduleGrid: document.getElementById('scheduleGrid'),
     };
 
     // ======================================================
-    // Local-only storage (for notes + fallback)
+    // Local-only storage (notes + lock)
     // ======================================================
     const STORAGE = {
-        NOTES: "pairforge_teacher_notes_v2",
-        LOCKED: "pairforge_roster_locked_v2",
-        LAST_ROTATION_PREFIX: "pairforge_last_rotation_date_room_", // + roomId
+        NOTES: "pairforge_teacher_notes_v3",
+        LOCKED: "pairforge_roster_locked_v3",
     };
 
     // ======================================================
@@ -456,11 +497,12 @@
     let roomId = null;
     let realtimeChannel = null;
 
-    let names = [];         // roster list
-    let presence = {};      // { lowerName: bool }
-    let groups = [];        // array of arrays
-    let rosterLocked = safeLoadJSON(STORAGE.LOCKED, false);
+    let names = [];
+    let presence = {};
+    let groups = [];
+    let weekSchedule = null; // { weekStart: 'YYYY-MM-DD', days: [{day:'Monday', pairs:[['A','B'],...]}] }
 
+    let rosterLocked = safeLoadJSON(STORAGE.LOCKED, false);
     els.teacherNotes.value = localStorage.getItem(STORAGE.NOTES) || "";
 
     // ======================================================
@@ -520,19 +562,31 @@
         const url = new URL(window.location.href);
         return url.searchParams.get("room");
     }
-
     function setRoomInUrl(id){
         const url = new URL(window.location.href);
         url.searchParams.set("room", id);
         history.replaceState(null, "", url.toString());
     }
-
     function randomRoomId(){
         return "room-" + Math.random().toString(36).slice(2,10);
     }
 
+    // Week start (Monday) in local time
+    function weekStartISO(date = new Date()){
+        const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const day = d.getDay(); // 0 Sun..6 Sat
+        const diffToMonday = (day === 0) ? -6 : (1 - day);
+        d.setDate(d.getDate() + diffToMonday);
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const dd = String(d.getDate()).padStart(2,'0');
+        return `${y}-${m}-${dd}`;
+    }
+
+    const WEEK_DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+
     // ======================================================
-    // Supabase data functions
+    // Supabase data
     // ======================================================
     async function ensureRoom(id){
         const { data: found, error: findErr } = await supa
@@ -555,13 +609,11 @@
     async function loadRoomState(){
         if (!roomId) return;
 
-        // members
         const { data: members, error: memErr } = await supa
             .from("room_members")
             .select("member_id,display_name,present,sort_order")
             .eq("room_id", roomId)
             .order("sort_order", { ascending: true });
-
         if (memErr) throw memErr;
 
         names = (members || []).map(m => m.display_name);
@@ -576,13 +628,15 @@
             .eq("room_id", roomId)
             .eq("day", today)
             .maybeSingle();
-
         if (grpErr) throw grpErr;
         groups = grp?.groups || [];
 
         renderRoster();
         renderList(groups, grp ? `Loaded today's groups (${today}) from room "${roomId}".` : `Room "${roomId}" loaded. No groups yet today.`);
         renderBoard();
+
+        // Load schedule for this week if exists
+        await loadWeekSchedule();
     }
 
     async function saveRosterToRoom(){
@@ -595,7 +649,6 @@
             sort_order: idx,
         }));
 
-        // Replace entire roster (simple + reliable for MVP)
         const { error: delErr } = await supa
             .from("room_members")
             .delete()
@@ -612,13 +665,37 @@
 
     async function saveGroupsToRoom(){
         if (!roomId) return;
-
         const today = todayISO();
         const { error } = await supa
             .from("room_groups")
             .upsert([{ room_id: roomId, day: today, groups }], { onConflict: "room_id,day" });
-
         if (error) throw error;
+    }
+
+    // ---- SCHEDULE (new) ----
+    async function loadWeekSchedule(){
+        if (!roomId) return;
+        const ws = weekStartISO();
+        const { data, error } = await supa
+            .from("room_schedules")
+            .select("schedule")
+            .eq("room_id", roomId)
+            .eq("week_start", ws)
+            .maybeSingle();
+        if (error) throw error;
+        weekSchedule = data?.schedule || null;
+        renderWeekSchedule();
+    }
+
+    async function saveWeekSchedule(scheduleObj){
+        if (!roomId) return;
+        const ws = weekStartISO();
+        const { error } = await supa
+            .from("room_schedules")
+            .upsert([{ room_id: roomId, week_start: ws, schedule: scheduleObj }], { onConflict: "room_id,week_start" });
+        if (error) throw error;
+        weekSchedule = scheduleObj;
+        renderWeekSchedule();
     }
 
     async function subscribeRealtime(){
@@ -639,6 +716,10 @@
             .on("postgres_changes",
                 { event: "*", schema: "public", table: "room_groups", filter: `room_id=eq.${roomId}` },
                 async () => { await loadRoomState(); }
+            )
+            .on("postgres_changes",
+                { event: "*", schema: "public", table: "room_schedules", filter: `room_id=eq.${roomId}` },
+                async () => { await loadWeekSchedule(); }
             );
 
         const { error } = await realtimeChannel.subscribe();
@@ -660,9 +741,6 @@
         await subscribeRealtime();
 
         setRoomStatus(`✅ Joined room "${roomId}". Share the room link so others join.`, "statusOk");
-
-        // Run daily rotate check
-        await dailyAutoRotate(false);
     }
 
     async function pushLocalToRoom(){
@@ -672,7 +750,6 @@
         const ok = confirm("Push local roster to the room? This OVERWRITES the room's current members.");
         if (!ok) return;
 
-        // Ensure presence defaults
         names.forEach(n => {
             if (presence[keyOfName(n)] === undefined) presence[keyOfName(n)] = true;
         });
@@ -797,13 +874,11 @@
                 const { name, fromGroup } = JSON.parse(payload);
                 if (fromGroup === gi) return;
 
-                // Move
                 const from = groups[fromGroup];
                 const idx = from.indexOf(name);
                 if (idx >= 0) from.splice(idx, 1);
                 groups[gi].push(name);
 
-                // Remove empty groups
                 groups = groups.filter(gr => gr.length > 0);
 
                 renderBoard();
@@ -848,6 +923,52 @@
         const isMob = els.groupMode.value === "mobSize";
         els.mobSize.disabled = !isMob;
         els.mobSize.style.opacity = isMob ? "1" : ".6";
+    }
+
+    // ---- Schedule UI ----
+    function renderWeekSchedule(){
+        const ws = weekStartISO();
+        els.weekMeta.textContent = roomId
+            ? `Week starting ${ws} (room: ${roomId}).`
+            : `Week starting ${ws}. Join a room to sync schedule.`;
+
+        els.scheduleGrid.innerHTML = "";
+
+        if (!weekSchedule || !weekSchedule.days){
+            els.scheduleStatus.textContent = "No schedule yet for this week.";
+            return;
+        }
+
+        els.scheduleStatus.textContent = `✅ Schedule loaded for week starting ${ws}.`;
+
+        for (const d of weekSchedule.days){
+            const dayCard = document.createElement("div");
+            dayCard.className = "dayCard";
+
+            const dayName = document.createElement("div");
+            dayName.className = "dayName";
+            dayName.textContent = d.day;
+
+            dayCard.appendChild(dayName);
+
+            const pairs = d.pairs || [];
+            if (!pairs.length){
+                const none = document.createElement("div");
+                none.className = "pairLine";
+                none.style.color = "rgba(255,255,255,.7)";
+                none.textContent = "No pairs";
+                dayCard.appendChild(none);
+            } else {
+                pairs.forEach(p => {
+                    const line = document.createElement("div");
+                    line.className = "pairLine";
+                    line.textContent = `${p.join(" + ")}`;
+                    dayCard.appendChild(line);
+                });
+            }
+
+            els.scheduleGrid.appendChild(dayCard);
+        }
     }
 
     // ======================================================
@@ -917,30 +1038,134 @@
         }
     }
 
-    async function rotateNow(){
-        await generateAndSync();
-    }
+    // ======================================================
+    // Weekly round-robin scheduler (pairs)
+    // ======================================================
+    // Classic "circle method" round robin:
+    // For N players (add BYE if odd), generate N-1 rounds of pairings.
+    function roundRobinPairs(players){
+        const list = [...players];
+        if (list.length < 2) return [];
 
-    async function dailyAutoRotate(force=false){
-        if (!roomId) return;
+        // If odd, add a BYE placeholder
+        const BYE = "__BYE__";
+        if (list.length % 2 === 1) list.push(BYE);
 
-        const key = STORAGE.LAST_ROTATION_PREFIX + roomId;
-        const last = localStorage.getItem(key);
-        const today = todayISO();
-        if (!force && last === today) return;
+        const n = list.length;
+        const rounds = [];
 
-        // only rotate if at least 2 present
-        if (presentNames().length >= 2){
-            generateGroupsLocal();
-            await saveGroupsToRoom();
-            localStorage.setItem(key, today);
-            els.resultMeta.textContent = `✅ Auto-rotated for ${today} (room: ${roomId}).`;
-        } else {
-            localStorage.setItem(key, today);
-            els.resultMeta.textContent = `ℹ️ Auto-rotate checked for ${today} (not enough present names).`;
+        // We'll rotate all but the first element
+        let arr = [...list];
+
+        for (let r = 0; r < n - 1; r++){
+            const pairs = [];
+            for (let i = 0; i < n / 2; i++){
+                const a = arr[i];
+                const b = arr[n - 1 - i];
+                if (a !== BYE && b !== BYE){
+                    pairs.push([a, b]);
+                }
+            }
+            rounds.push(pairs);
+
+            // rotate:
+            // keep arr[0] fixed, rotate the rest clockwise
+            const fixed = arr[0];
+            const rest = arr.slice(1);
+            rest.unshift(rest.pop());
+            arr = [fixed, ...rest];
         }
+
+        return rounds;
     }
 
+    function buildWeekScheduleFromRoster(){
+        const roster = presentNames();
+        if (roster.length < 2){
+            alert("Need at least 2 PRESENT names to build a weekly schedule.");
+            return null;
+        }
+
+        // We randomize the starting order once per schedule generation
+        const seedOrder = fisherYates(roster);
+
+        const rounds = roundRobinPairs(seedOrder);
+
+        // Map Mon–Fri to rounds. If fewer rounds than 5, wrap; if more, take first 5.
+        const days = WEEK_DAYS.map((dayName, idx) => {
+            const round = rounds.length ? rounds[idx % rounds.length] : [];
+            return { day: dayName, pairs: round };
+        });
+
+        return {
+            weekStart: weekStartISO(),
+            createdAt: new Date().toISOString(),
+            mode: "pairs-round-robin",
+            roster: seedOrder,
+            days,
+        };
+    }
+
+    async function generateWeekSchedule(){
+        const sched = buildWeekScheduleFromRoster();
+        if (!sched) return;
+
+        if (!roomId){
+            weekSchedule = sched;
+            renderWeekSchedule();
+            alert("Generated schedule locally. Join a room to sync it.");
+            return;
+        }
+
+        await saveWeekSchedule(sched);
+        alert("✅ Weekly schedule saved to the room.");
+    }
+
+    async function autoGenerateWeekIfMissing(){
+        if (!roomId) return alert("Join a room first.");
+        const ws = weekStartISO();
+
+        const { data, error } = await supa
+            .from("room_schedules")
+            .select("schedule")
+            .eq("room_id", roomId)
+            .eq("week_start", ws)
+            .maybeSingle();
+        if (error) throw error;
+
+        if (data?.schedule){
+            weekSchedule = data.schedule;
+            renderWeekSchedule();
+            alert("Schedule already exists for this week ✅");
+            return;
+        }
+
+        await generateWeekSchedule();
+    }
+
+    async function copyWeekSchedule(){
+        if (!weekSchedule) return alert("No schedule yet. Generate the week schedule first.");
+
+        const lines = [];
+        lines.push(`PairForge Weekly Schedule — week of ${weekSchedule.weekStart}${roomId ? ` — room: ${roomId}` : ""}`);
+        lines.push("");
+
+        for (const d of weekSchedule.days){
+            lines.push(`${d.day}`);
+            if (!d.pairs.length){
+                lines.push("  (no pairs)");
+            } else {
+                d.pairs.forEach(p => lines.push(`  ${p.join(" + ")}`));
+            }
+            lines.push("");
+        }
+
+        await copyToClipboard(lines.join("\n"), "Schedule copied ✅");
+    }
+
+    // ======================================================
+    // Exports + Teacher
+    // ======================================================
     function exportCSV(){
         if (!groups.length) return alert("Generate groups first.");
         const lines = [];
@@ -966,7 +1191,6 @@
         await copyToClipboard(msg, "Slack message copied ✅");
     }
 
-    // Teacher features (local)
     function setRosterLocked(val){
         rosterLocked = !!val;
         safeSaveJSON(STORAGE.LOCKED, rosterLocked);
@@ -994,7 +1218,7 @@
             await joinRoom(els.roomInput.value);
         } catch (e){
             console.error(e);
-            setRoomStatus("❌ Could not join room. Most common causes: missing tables, wrong keys, or RLS blocking writes.", "statusBad");
+            setRoomStatus("❌ Could not join room. Common causes: missing tables, wrong keys, or RLS blocking writes.", "statusBad");
             alert("Join failed. If you see an RLS error in console, tell me and I'll give you the exact policy.");
         }
     };
@@ -1035,9 +1259,11 @@
         names = [];
         presence = {};
         groups = [];
+        weekSchedule = null;
         renderRoster();
         renderList(groups, "Cleared.");
         renderBoard();
+        renderWeekSchedule();
         if (roomId){
             try {
                 await saveRosterToRoom();
@@ -1094,13 +1320,20 @@
     };
 
     els.rotateNowBtn.onclick = async () => {
-        try { await rotateNow(); }
+        try { await generateAndSync(); }
         catch(e){ console.error(e); alert("Rotate failed."); }
     };
 
-    els.forceDailyBtn.onclick = async () => {
-        try { await dailyAutoRotate(true); }
-        catch(e){ console.error(e); alert("Daily rotate failed."); }
+    els.genWeekBtn.onclick = async () => {
+        try { await generateWeekSchedule(); }
+        catch(e){ console.error(e); alert("Weekly schedule failed. Ensure room_schedules table exists and Realtime is enabled."); }
+    };
+
+    els.copyWeekBtn.onclick = copyWeekSchedule;
+
+    els.autoWeekBtn.onclick = async () => {
+        try { await autoGenerateWeekIfMissing(); }
+        catch(e){ console.error(e); alert("Auto schedule failed. Ensure room_schedules exists and RLS policies allow read/write."); }
     };
 
     els.exportCsvBtn.onclick = exportCSV;
@@ -1139,7 +1372,6 @@
     async function init(){
         syncMob();
 
-        // Local teacher notes status
         if (els.teacherNotes.value){
             els.teacherNotesStatus.textContent = "Notes loaded ✅";
         }
@@ -1155,10 +1387,10 @@
             }
         } else {
             setRoomStatus('No room selected. Enter one like "bootcamp1" and click Join.', "statusWarn");
-            // keep UI usable offline until you join a room
             renderRoster();
             renderList(groups, "No room yet. Join a room to enable realtime collaboration.");
             renderBoard();
+            renderWeekSchedule();
         }
     }
 
