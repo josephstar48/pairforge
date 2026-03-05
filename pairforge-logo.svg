@@ -1,0 +1,24 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#0f172a"></rect>
+
+  <!-- Forge flame -->
+  <path d="M256 120
+           C220 200 320 220 260 320
+           C330 300 360 230 300 160
+           C290 140 270 130 256 120Z" fill="#f97316"></path>
+
+  <!-- Pair circles -->
+  <circle cx="180" cy="360" r="40" fill="#22c55e"></circle>
+  <circle cx="332" cy="360" r="40" fill="#3b82f6"></circle>
+
+  <!-- Connecting line -->
+  <line x1="220" y1="360" x2="292" y2="360" stroke="#ffffff" stroke-width="10" stroke-linecap="round"></line>
+
+  <!-- Text -->
+  <text x="256" y="450" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="44" fill="white" font-weight="bold">
+        PairForge
+  </text>
+
+</svg>

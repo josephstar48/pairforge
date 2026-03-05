@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Uses your local favicon.svg file -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <title>PairForge — Rooms + Realtime</title>
+
+    <!-- Supabase client (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root{
+            --bg1:#0b1020;
+            --bg2:#111a33;
+            --card: rgba(255,255,255,.08);
+            --border: rgba(255,255,255,.14);
+            --text: rgba(255,255,255,.92);
+            --muted: rgba(255,255,255,.70);
+            --shadow: 0 10px 30px rgba(0,0,0,.35);
+            --radius: 18px;
+            --accent: #60a5fa;
+            --good: #22c55e;
+            --warn: #f59e0b;
+            --bad: #fb7185;
+        }
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+            color: var(--text);
+            background:
+                    radial-gradient(1200px 700px at 15% 15%, #23306b 0%, transparent 55%),
+                    radial-gradient(900px 600px at 85% 20%, #6b2a6d 0%, transparent 55%),
+                    linear-gradient(180deg, var(--bg1), var(--bg2));
+            min-height:100vh;
+            padding:24px;
+        }
+        .wrap{ max-width: 1100px; margin:0 auto; }
+
+        header{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin-bottom:14px;
+            justify-content:space-between;
+            flex-wrap:wrap;
+        }
+        .brand{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            min-width:280px;
+        }
+        .brand h1{
+            margin:0;
+            font-size: 28px;
+            letter-spacing: .2px;
+        }
+        .subtitle{
+            margin-top:4px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        .badge{
+            display:inline-flex; align-items:center; gap:8px;
+            padding:10px 12px;
+            border:1px solid var(--border);
+            background: rgba(255,255,255,.06);
+            border-radius: 999px;
+            box-shadow: var(--shadow);
+            font-size: 13px;
+            color: var(--muted);
+            white-space:nowrap;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns: 1fr;
+            gap:14px;
+        }
+        @media (min-width: 980px){
+            .grid{ grid-template-columns: 1.05fr .95fr; }
+        }
+
+        .card{
+            background: var(--card);
+            border:1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding:16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        input, textarea, select{
+            width:100%;
+            padding:12px 12px;
+            border-radius: 12px;
+            border:1px solid var(--border);
+            background: rgba(10,14,28,.65);
+            color: var(--text);
+            outline:none;
+        }
+        textarea{ min-height: 120px; resize: vertical; }
+        input::placeholder, textarea::placeholder{ color: rgba(255,255,255,.45); }
+
+        .btn{
+            border:1px solid var(--border);
+            background: rgba(255,255,255,.10);
+            color: var(--text);
+            padding:12px 14px;
+            border-radius: 12px;
+            cursor:pointer;
+            transition: transform .05s ease, background .15s ease;
+            font-weight: 800;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+        }
+        .btn:hover{ background: rgba(255,255,255,.14); }
+        .btn:active{ transform: translateY(1px); }
+        .btn.primary{ background: rgba(96,165,250,.20); border-color: rgba(96,165,250,.35); }
+        .btn.primary:hover{ background: rgba(96,165,250,.26); }
+        .btn.danger{ background: rgba(251,113,133,.14); border-color: rgba(251,113,133,.25); }
+
+        .sectionTitle{
+            font-weight: 900;
+            margin:0 0 10px;
+            letter-spacing:.2px;
+        }
+        .muted{ color: var(--muted); font-size: 13px; }
+        .divider{ height:1px; background: rgba(255,255,255,.10); margin: 12px 0; }
+
+        .pill{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border:1px solid var(--border);
+            background: rgba(255,255,255,.06);
+            margin: 6px 8px 0 0;
+            font-size: 14px;
+            user-select:none;
+        }
+        .pill button{
+            border:none;
+            background: transparent;
+            color: rgba(255,255,255,.70);
+            cursor:pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        ul{ margin:10px 0 0 18px; }
+        li{ margin: 8px 0; }
+
+        .kpi{
+            display:flex; gap:10px; flex-wrap:wrap;
+            margin-top: 10px;
+        }
+        .kpi .chip{
+            padding:8px 10px;
+            border-radius: 12px;
+            border:1px solid var(--border);
+            background: rgba(255,255,255,.06);
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .board{
+            display:grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap:12px;
+            margin-top:12px;
+        }
+        .group{
+            border: 1px solid var(--border);
+            background: rgba(0,0,0,.12);
+            border-radius: 14px;
+            padding:12px;
+            min-height:120px;
+        }
+        .groupHeader{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+            margin-bottom:10px;
+        }
+        .groupTitle{
+            font-weight: 900;
+            font-size: 14px;
+            letter-spacing:.2px;
+        }
+        .dropHint{ font-size: 12px; color: var(--muted); }
+        .person{
+            background: rgba(96,165,250,.18);
+            border: 1px solid rgba(96,165,250,.30);
+            border-radius: 12px;
+            padding:10px 10px;
+            margin:8px 0;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            cursor: grab;
+        }
+        .person:active{ cursor: grabbing; }
+        .person .name{ font-weight: 800; }
+        .presentToggle{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            font-size:12px;
+            color: var(--muted);
+            user-select:none;
+        }
+        .presentToggle input{ width:auto; margin:0; }
+        .noteBox{
+            width:100%;
+            margin-top:8px;
+            min-height: 70px;
+            resize: vertical;
+        }
+        .rightActions{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .statusOk{ color: rgba(34,197,94,.92); }
+        .statusWarn{ color: rgba(245,158,11,.92); }
+        .statusBad{ color: rgba(251,113,133,.95); }
+        code.k{ background: rgba(0,0,0,.25); padding:2px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.12); }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+
+    <header style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div class="brand">
+            <img src="pairforge-logo.svg" width="60" height="60" alt="PairForge logo">
+            <div>
+                <h1>PairForge</h1>
+                <div class="subtitle">Rooms + realtime pair/mob randomizer. Share <code class="k">?room=bootcamp1</code> to collaborate.</div>
+            </div>
+        </div>
+        <div class="badge">⚡ Realtime Rooms • Supabase • Drag & Drop</div>
+    </header>
+
+    <!-- ROOM BAR -->
+    <div class="card" style="margin-bottom:14px;">
+        <div class="sectionTitle" style="margin-bottom:6px;">Room</div>
+        <div class="muted">Join the same room link on multiple devices to collaborate live.</div>
+        <div class="row" style="margin-top:10px;">
+            <input id="roomInput" placeholder="e.g., bootcamp1" />
+            <button class="btn" id="joinRoomBtn">🚪 Join</button>
+            <button class="btn" id="newRoomBtn">✨ New</button>
+            <button class="btn" id="copyRoomLinkBtn">🔗 Copy Room Link</button>
+            <button class="btn" id="pushLocalBtn" title="Push your local roster to the room (overwrites room members)">⬆️ Push Local → Room</button>
+        </div>
+        <div class="muted" id="roomStatus" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="grid">
+        <!-- LEFT -->
+        <div class="card">
+            <div class="sectionTitle">1) Add names</div>
+            <div class="muted">Roster changes sync to the room. Use Present/Absent to exclude someone from grouping.</div>
+
+            <div class="row" style="margin-top:10px;">
+                <input id="nameInput" placeholder="Type a name (e.g., Alice)" />
+                <button class="btn" id="addBtn">➕ Add</button>
+                <button class="btn danger" id="clearBtn" title="Remove all names">🧹 Clear</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="sectionTitle">2) Choose mode</div>
+            <div class="row">
+                <div style="flex:1; min-width:260px;">
+                    <div class="muted">Grouping style</div>
+                    <select id="groupMode">
+                        <option value="pairsOnly">Pairs only (leave 1 solo if odd)</option>
+                        <option value="pairsPlusTrio" selected>Pairs + Trio (odd gets added to make a trio)</option>
+                        <option value="mobSize">Mob groups of size…</option>
+                    </select>
+                </div>
+
+                <div style="width:180px;">
+                    <div class="muted">Mob size</div>
+                    <input id="mobSize" type="number" min="3" max="10" value="4" />
+                </div>
+            </div>
+
+            <div class="kpi">
+                <div class="chip">🧲 Drag & drop board</div>
+                <div class="chip">🔴 Realtime rooms</div>
+                <div class="chip">🗓️ Daily auto-rotate (per room)</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="muted">Quick add (one name per line):</div>
+            <textarea id="bulkInput" placeholder="Alice&#10;Bob&#10;Charlie&#10;Dana"></textarea>
+            <div class="row" style="margin-top:10px;">
+                <button class="btn" id="bulkAddBtn">📥 Add Lines</button>
+                <button class="btn" id="shuffleBtn">🔀 Shuffle</button>
+                <button class="btn" id="exportNamesBtn">📋 Copy Names</button>
+                <button class="btn" id="importBtn">📌 Import</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="row">
+                <button class="btn primary" id="generateBtn">🎯 Generate</button>
+                <button class="btn" id="rotateNowBtn">🔁 Rotate Now</button>
+                <button class="btn" id="forceDailyBtn" title="For testing">🧪 Run Daily Rotate</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="sectionTitle">3) Export</div>
+            <div class="row">
+                <button class="btn" id="exportCsvBtn">⬇️ CSV</button>
+                <button class="btn" id="exportSlackBtn">💬 Slack Message</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="sectionTitle">Teacher Dashboard</div>
+            <div class="muted">Lock roster and write notes. (Notes stay on this device.)</div>
+            <div class="row" style="margin-top:10px;">
+                <button class="btn" id="lockRosterBtn">🔒 Lock</button>
+                <button class="btn" id="unlockRosterBtn">🔓 Unlock</button>
+                <button class="btn" id="markAllPresentBtn">✅ All Present</button>
+                <button class="btn" id="markAllAbsentBtn">🚫 All Absent</button>
+            </div>
+
+            <textarea id="teacherNotes" class="noteBox" placeholder="Teacher notes (optional)"></textarea>
+            <div class="muted" id="teacherNotesStatus"></div>
+        </div>
+
+        <!-- RIGHT -->
+        <div>
+            <div class="card">
+                <div class="sectionTitle">Roster (<span id="count">0</span>)</div>
+                <div class="muted">Presence is synced to the room.</div>
+                <div id="names"></div>
+            </div>
+
+            <div class="card" style="margin-top:14px;">
+                <div class="row" style="justify-content:space-between;">
+                    <div>
+                        <div class="sectionTitle">Results</div>
+                        <div class="muted" id="resultMeta">No groups generated yet.</div>
+                    </div>
+                    <div class="rightActions">
+                        <button class="btn" id="saveBoardBtn">💾 Save Board</button>
+                        <button class="btn" id="resetBoardBtn">↩️ Reset</button>
+                    </div>
+                </div>
+
+                <ul id="results"></ul>
+
+                <div class="divider"></div>
+
+                <div class="sectionTitle">Drag-and-drop Team Board</div>
+                <div class="muted">Drag a person between groups; changes sync live.</div>
+
+                <div id="board" class="board"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ======================================================
+    // 0) PASTE YOUR SUPABASE KEYS HERE (Settings → API)
+    // ======================================================
+    const SUPABASE_URL = "https://zngbgdpttaxwpcoiouer.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_uQSBmsgpROCduPskqUHB_Q_u02GLfd5";
+
+    const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ======================================================
+    // Elements
+    // ======================================================
+    const els = {
+        // Room
+        roomInput: document.getElementById('roomInput'),
+        joinRoomBtn: document.getElementById('joinRoomBtn'),
+        newRoomBtn: document.getElementById('newRoomBtn'),
+        copyRoomLinkBtn: document.getElementById('copyRoomLinkBtn'),
+        pushLocalBtn: document.getElementById('pushLocalBtn'),
+        roomStatus: document.getElementById('roomStatus'),
+
+        // Roster + controls
+        nameInput: document.getElementById('nameInput'),
+        addBtn: document.getElementById('addBtn'),
+        clearBtn: document.getElementById('clearBtn'),
+        bulkInput: document.getElementById('bulkInput'),
+        bulkAddBtn: document.getElementById('bulkAddBtn'),
+        shuffleBtn: document.getElementById('shuffleBtn'),
+        exportNamesBtn: document.getElementById('exportNamesBtn'),
+        importBtn: document.getElementById('importBtn'),
+
+        // Grouping controls
+        generateBtn: document.getElementById('generateBtn'),
+        rotateNowBtn: document.getElementById('rotateNowBtn'),
+        forceDailyBtn: document.getElementById('forceDailyBtn'),
+        groupMode: document.getElementById('groupMode'),
+        mobSize: document.getElementById('mobSize'),
+
+        // Exports
+        exportCsvBtn: document.getElementById('exportCsvBtn'),
+        exportSlackBtn: document.getElementById('exportSlackBtn'),
+
+        // Teacher
+        lockRosterBtn: document.getElementById('lockRosterBtn'),
+        unlockRosterBtn: document.getElementById('unlockRosterBtn'),
+        markAllPresentBtn: document.getElementById('markAllPresentBtn'),
+        markAllAbsentBtn: document.getElementById('markAllAbsentBtn'),
+        teacherNotes: document.getElementById('teacherNotes'),
+        teacherNotesStatus: document.getElementById('teacherNotesStatus'),
+
+        // UI outputs
+        names: document.getElementById('names'),
+        count: document.getElementById('count'),
+        results: document.getElementById('results'),
+        resultMeta: document.getElementById('resultMeta'),
+        board: document.getElementById('board'),
+
+        saveBoardBtn: document.getElementById('saveBoardBtn'),
+        resetBoardBtn: document.getElementById('resetBoardBtn'),
+    };
+
+    // ======================================================
+    // Local-only storage (for notes + fallback)
+    // ======================================================
+    const STORAGE = {
+        NOTES: "pairforge_teacher_notes_v2",
+        LOCKED: "pairforge_roster_locked_v2",
+        LAST_ROTATION_PREFIX: "pairforge_last_rotation_date_room_", // + roomId
+    };
+
+    // ======================================================
+    // State
+    // ======================================================
+    let roomId = null;
+    let realtimeChannel = null;
+
+    let names = [];         // roster list
+    let presence = {};      // { lowerName: bool }
+    let groups = [];        // array of arrays
+    let rosterLocked = safeLoadJSON(STORAGE.LOCKED, false);
+
+    els.teacherNotes.value = localStorage.getItem(STORAGE.NOTES) || "";
+
+    // ======================================================
+    // Helpers
+    // ======================================================
+    function norm(s){ return (s || "").trim().replace(/\s+/g, " "); }
+    function keyOfName(n){ return norm(n).toLowerCase(); }
+
+    function safeSaveJSON(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+    function safeLoadJSON(key, fallback){
+        try { return JSON.parse(localStorage.getItem(key) || "null") ?? fallback; }
+        catch { return fallback; }
+    }
+
+    function todayISO(){
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const day = String(d.getDate()).padStart(2,'0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function fisherYates(arr){
+        const a = [...arr];
+        for (let i=a.length-1; i>0; i--){
+            const j = Math.floor(Math.random()*(i+1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function presentNames(){
+        return names.filter(n => presence[keyOfName(n)] !== false);
+    }
+
+    function chunk(list, size){
+        const out = [];
+        for (let i=0; i<list.length; i+=size) out.push(list.slice(i, i+size));
+        return out;
+    }
+
+    async function copyToClipboard(text, okMsg){
+        try {
+            await navigator.clipboard.writeText(text);
+            alert(okMsg || "Copied ✅");
+        } catch {
+            prompt("Copy this:", text);
+        }
+    }
+
+    function setRoomStatus(msg, kind){
+        els.roomStatus.className = "muted " + (kind || "");
+        els.roomStatus.textContent = msg || "";
+    }
+
+    function getRoomFromUrl(){
+        const url = new URL(window.location.href);
+        return url.searchParams.get("room");
+    }
+
+    function setRoomInUrl(id){
+        const url = new URL(window.location.href);
+        url.searchParams.set("room", id);
+        history.replaceState(null, "", url.toString());
+    }
+
+    function randomRoomId(){
+        return "room-" + Math.random().toString(36).slice(2,10);
+    }
+
+    // ======================================================
+    // Supabase data functions
+    // ======================================================
+    async function ensureRoom(id){
+        const { data: found, error: findErr } = await supa
+            .from("rooms")
+            .select("id,name")
+            .eq("id", id)
+            .maybeSingle();
+        if (findErr) throw findErr;
+        if (found) return found;
+
+        const { data: created, error: createErr } = await supa
+            .from("rooms")
+            .insert([{ id, name: id }])
+            .select()
+            .single();
+        if (createErr) throw createErr;
+        return created;
+    }
+
+    async function loadRoomState(){
+        if (!roomId) return;
+
+        // members
+        const { data: members, error: memErr } = await supa
+            .from("room_members")
+            .select("member_id,display_name,present,sort_order")
+            .eq("room_id", roomId)
+            .order("sort_order", { ascending: true });
+
+        if (memErr) throw memErr;
+
+        names = (members || []).map(m => m.display_name);
+        presence = {};
+        (members || []).forEach(m => presence[keyOfName(m.display_name)] = !!m.present);
+
+        // today's groups
+        const today = todayISO();
+        const { data: grp, error: grpErr } = await supa
+            .from("room_groups")
+            .select("groups")
+            .eq("room_id", roomId)
+            .eq("day", today)
+            .maybeSingle();
+
+        if (grpErr) throw grpErr;
+        groups = grp?.groups || [];
+
+        renderRoster();
+        renderList(groups, grp ? `Loaded today's groups (${today}) from room "${roomId}".` : `Room "${roomId}" loaded. No groups yet today.`);
+        renderBoard();
+    }
+
+    async function saveRosterToRoom(){
+        if (!roomId) return;
+
+        const rows = names.map((n, idx) => ({
+            room_id: roomId,
+            display_name: n,
+            present: presence[keyOfName(n)] !== false,
+            sort_order: idx,
+        }));
+
+        // Replace entire roster (simple + reliable for MVP)
+        const { error: delErr } = await supa
+            .from("room_members")
+            .delete()
+            .eq("room_id", roomId);
+        if (delErr) throw delErr;
+
+        if (rows.length > 0){
+            const { error: insErr } = await supa
+                .from("room_members")
+                .insert(rows);
+            if (insErr) throw insErr;
+        }
+    }
+
+    async function saveGroupsToRoom(){
+        if (!roomId) return;
+
+        const today = todayISO();
+        const { error } = await supa
+            .from("room_groups")
+            .upsert([{ room_id: roomId, day: today, groups }], { onConflict: "room_id,day" });
+
+        if (error) throw error;
+    }
+
+    async function subscribeRealtime(){
+        if (!roomId) return;
+
+        if (realtimeChannel){
+            await supa.removeChannel(realtimeChannel);
+            realtimeChannel = null;
+        }
+
+        realtimeChannel = supa.channel(`pairforge:${roomId}`);
+
+        realtimeChannel
+            .on("postgres_changes",
+                { event: "*", schema: "public", table: "room_members", filter: `room_id=eq.${roomId}` },
+                async () => { await loadRoomState(); }
+            )
+            .on("postgres_changes",
+                { event: "*", schema: "public", table: "room_groups", filter: `room_id=eq.${roomId}` },
+                async () => { await loadRoomState(); }
+            );
+
+        const { error } = await realtimeChannel.subscribe();
+        if (error) throw error;
+    }
+
+    async function joinRoom(id){
+        id = norm(id);
+        if (!id) return alert("Enter a room id like bootcamp1");
+
+        roomId = id;
+        els.roomInput.value = roomId;
+        setRoomInUrl(roomId);
+
+        setRoomStatus("Joining room…", "");
+        await ensureRoom(roomId);
+
+        await loadRoomState();
+        await subscribeRealtime();
+
+        setRoomStatus(`✅ Joined room "${roomId}". Share the room link so others join.`, "statusOk");
+
+        // Run daily rotate check
+        await dailyAutoRotate(false);
+    }
+
+    async function pushLocalToRoom(){
+        if (!roomId) return alert("Join a room first.");
+        if (rosterLocked) return alert("Roster is locked. Unlock first.");
+
+        const ok = confirm("Push local roster to the room? This OVERWRITES the room's current members.");
+        if (!ok) return;
+
+        // Ensure presence defaults
+        names.forEach(n => {
+            if (presence[keyOfName(n)] === undefined) presence[keyOfName(n)] = true;
+        });
+
+        await saveRosterToRoom();
+        setRoomStatus("⬆️ Local roster pushed to room ✅", "statusOk");
+    }
+
+    async function copyRoomLink(){
+        if (!roomId) return alert("Join a room first.");
+        const url = new URL(window.location.href);
+        url.searchParams.set("room", roomId);
+        await copyToClipboard(url.toString(), "Room link copied ✅");
+    }
+
+    // ======================================================
+    // UI rendering
+    // ======================================================
+    function renderRoster(){
+        els.names.innerHTML = "";
+        els.count.textContent = names.length;
+
+        names.forEach((n, idx) => {
+            const pill = document.createElement("span");
+            pill.className = "pill";
+
+            const label = document.createElement("span");
+            label.textContent = n;
+            pill.appendChild(label);
+
+            const toggleWrap = document.createElement("span");
+            toggleWrap.className = "presentToggle";
+
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.checked = presence[keyOfName(n)] !== false;
+            cb.disabled = rosterLocked;
+
+            const cbLabel = document.createElement("span");
+            cbLabel.textContent = cb.checked ? "Present" : "Absent";
+
+            cb.onchange = async () => {
+                presence[keyOfName(n)] = cb.checked;
+                cbLabel.textContent = cb.checked ? "Present" : "Absent";
+                if (roomId){
+                    try { await saveRosterToRoom(); }
+                    catch(e){ console.error(e); alert("Could not sync presence to room."); }
+                }
+            };
+
+            toggleWrap.appendChild(cb);
+            toggleWrap.appendChild(cbLabel);
+            pill.appendChild(toggleWrap);
+
+            const x = document.createElement("button");
+            x.textContent = "×";
+            x.title = rosterLocked ? "Roster is locked" : "Remove";
+            x.disabled = rosterLocked;
+            x.style.opacity = rosterLocked ? ".4" : "1";
+
+            x.onclick = async () => {
+                names.splice(idx, 1);
+                delete presence[keyOfName(n)];
+                renderRoster();
+                if (roomId){
+                    try { await saveRosterToRoom(); }
+                    catch(e){ console.error(e); alert("Could not sync roster to room."); }
+                }
+            };
+
+            pill.appendChild(x);
+            els.names.appendChild(pill);
+        });
+    }
+
+    function renderList(groupsArr, meta){
+        els.results.innerHTML = "";
+        els.resultMeta.textContent = meta || "";
+        groupsArr.forEach((g, i) => {
+            const li = document.createElement("li");
+            li.textContent = `Group ${i+1}: ${g.join(" + ")}`;
+            els.results.appendChild(li);
+        });
+    }
+
+    function renderBoard(){
+        els.board.innerHTML = "";
+
+        groups.forEach((g, gi) => {
+            const col = document.createElement("div");
+            col.className = "group";
+            col.dataset.groupIndex = String(gi);
+
+            const header = document.createElement("div");
+            header.className = "groupHeader";
+
+            const title = document.createElement("div");
+            title.className = "groupTitle";
+            title.textContent = `Group ${gi+1}`;
+
+            const hint = document.createElement("div");
+            hint.className = "dropHint";
+            hint.textContent = "Drop here";
+
+            header.appendChild(title);
+            header.appendChild(hint);
+            col.appendChild(header);
+
+            col.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                col.style.outline = "2px solid rgba(96,165,250,.45)";
+                col.style.outlineOffset = "2px";
+            });
+            col.addEventListener("dragleave", () => { col.style.outline = "none"; });
+
+            col.addEventListener("drop", async (e) => {
+                e.preventDefault();
+                col.style.outline = "none";
+                const payload = e.dataTransfer.getData("text/plain");
+                if (!payload) return;
+
+                const { name, fromGroup } = JSON.parse(payload);
+                if (fromGroup === gi) return;
+
+                // Move
+                const from = groups[fromGroup];
+                const idx = from.indexOf(name);
+                if (idx >= 0) from.splice(idx, 1);
+                groups[gi].push(name);
+
+                // Remove empty groups
+                groups = groups.filter(gr => gr.length > 0);
+
+                renderBoard();
+                renderList(groups, "Updated by drag-and-drop.");
+
+                if (roomId){
+                    try { await saveGroupsToRoom(); }
+                    catch(e){ console.error(e); alert("Could not sync board to room."); }
+                }
+            });
+
+            g.forEach((name) => {
+                const item = document.createElement("div");
+                item.className = "person";
+                item.draggable = true;
+
+                const left = document.createElement("div");
+                left.className = "name";
+                left.textContent = name;
+
+                const right = document.createElement("div");
+                right.style.color = "rgba(255,255,255,.70)";
+                right.style.fontSize = "12px";
+                right.textContent = "drag";
+
+                item.appendChild(left);
+                item.appendChild(right);
+
+                item.addEventListener("dragstart", (e) => {
+                    e.dataTransfer.setData("text/plain", JSON.stringify({ name, fromGroup: gi }));
+                    e.dataTransfer.effectAllowed = "move";
+                });
+
+                col.appendChild(item);
+            });
+
+            els.board.appendChild(col);
+        });
+    }
+
+    function syncMob(){
+        const isMob = els.groupMode.value === "mobSize";
+        els.mobSize.disabled = !isMob;
+        els.mobSize.style.opacity = isMob ? "1" : ".6";
+    }
+
+    // ======================================================
+    // Core features
+    // ======================================================
+    function addNameLocal(name){
+        const n = norm(name);
+        if (!n) return;
+        const exists = names.some(x => x.toLowerCase() === n.toLowerCase());
+        if (!exists){
+            names.push(n);
+            if (presence[keyOfName(n)] === undefined) presence[keyOfName(n)] = true;
+            renderRoster();
+        }
+    }
+
+    function generateGroupsLocal(){
+        const present = presentNames();
+        if (present.length < 2){
+            alert("Need at least 2 PRESENT names to generate groups.");
+            return;
+        }
+
+        const shuffled = fisherYates(present);
+        const mode = els.groupMode.value;
+
+        if (mode === "pairsOnly"){
+            groups = chunk(shuffled, 2);
+            renderList(groups, groups.at(-1)?.length === 1 ? "Pairs only: last person is solo." : "Pairs only.");
+            renderBoard();
+            return;
+        }
+
+        if (mode === "pairsPlusTrio"){
+            let g = chunk(shuffled, 2);
+            if (g.length && g[g.length-1].length === 1 && g.length >= 2){
+                g[g.length-2].push(g[g.length-1][0]);
+                g.pop();
+            }
+            groups = g;
+            renderList(groups, "Pairs + Trio: odd person added to make a trio (when needed).");
+            renderBoard();
+            return;
+        }
+
+        if (mode === "mobSize"){
+            let size = parseInt(els.mobSize.value, 10);
+            if (Number.isNaN(size) || size < 3) size = 3;
+            if (size > 10) size = 10;
+
+            groups = chunk(shuffled, size);
+            if (groups.length >= 2 && groups[groups.length-1].length === 1){
+                const lone = groups.pop()[0];
+                groups[0].push(lone);
+            }
+
+            renderList(groups, `Mob mode: groups of ~${size}.`);
+            renderBoard();
+            return;
+        }
+    }
+
+    async function generateAndSync(){
+        generateGroupsLocal();
+        if (roomId){
+            await saveGroupsToRoom();
+        }
+    }
+
+    async function rotateNow(){
+        await generateAndSync();
+    }
+
+    async function dailyAutoRotate(force=false){
+        if (!roomId) return;
+
+        const key = STORAGE.LAST_ROTATION_PREFIX + roomId;
+        const last = localStorage.getItem(key);
+        const today = todayISO();
+        if (!force && last === today) return;
+
+        // only rotate if at least 2 present
+        if (presentNames().length >= 2){
+            generateGroupsLocal();
+            await saveGroupsToRoom();
+            localStorage.setItem(key, today);
+            els.resultMeta.textContent = `✅ Auto-rotated for ${today} (room: ${roomId}).`;
+        } else {
+            localStorage.setItem(key, today);
+            els.resultMeta.textContent = `ℹ️ Auto-rotate checked for ${today} (not enough present names).`;
+        }
+    }
+
+    function exportCSV(){
+        if (!groups.length) return alert("Generate groups first.");
+        const lines = [];
+        groups.forEach((g, i) => lines.push(`Group ${i+1},${g.map(x => `"${x.replaceAll('"','""')}"`).join(",")}`));
+        const csv = lines.join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "pairforge.csv";
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    async function exportSlack(){
+        if (!groups.length) return alert("Generate groups first.");
+        const today = todayISO();
+        const msg = [
+            `*PairForge Groups — ${today}*`,
+            roomId ? `_Room:_ *${roomId}*` : "",
+            ...groups.map((g,i)=> `• *Group ${i+1}:* ${g.join(" + ")}`)
+        ].filter(Boolean).join("\n");
+
+        await copyToClipboard(msg, "Slack message copied ✅");
+    }
+
+    // Teacher features (local)
+    function setRosterLocked(val){
+        rosterLocked = !!val;
+        safeSaveJSON(STORAGE.LOCKED, rosterLocked);
+        renderRoster();
+        alert(rosterLocked ? "Roster locked 🔒" : "Roster unlocked 🔓");
+    }
+
+    async function setAllPresence(isPresent){
+        if (rosterLocked) return alert("Roster is locked. Unlock to change presence.");
+        names.forEach(n => presence[keyOfName(n)] = !!isPresent);
+        renderRoster();
+        if (roomId) await saveRosterToRoom();
+    }
+
+    function saveNotes(){
+        localStorage.setItem(STORAGE.NOTES, els.teacherNotes.value || "");
+        els.teacherNotesStatus.textContent = `Saved ${new Date().toLocaleString()}`;
+    }
+
+    // ======================================================
+    // Events
+    // ======================================================
+    els.joinRoomBtn.onclick = async () => {
+        try {
+            await joinRoom(els.roomInput.value);
+        } catch (e){
+            console.error(e);
+            setRoomStatus("❌ Could not join room. Most common causes: missing tables, wrong keys, or RLS blocking writes.", "statusBad");
+            alert("Join failed. If you see an RLS error in console, tell me and I'll give you the exact policy.");
+        }
+    };
+
+    els.newRoomBtn.onclick = async () => {
+        try {
+            await joinRoom(randomRoomId());
+        } catch (e){
+            console.error(e);
+            alert("Could not create a new room.");
+        }
+    };
+
+    els.copyRoomLinkBtn.onclick = copyRoomLink;
+    els.pushLocalBtn.onclick = async () => {
+        try { await pushLocalToRoom(); }
+        catch(e){ console.error(e); alert("Could not push local roster to room."); }
+    };
+
+    els.addBtn.onclick = async () => {
+        if (rosterLocked) return alert("Roster is locked. Unlock to edit.");
+        addNameLocal(els.nameInput.value);
+        els.nameInput.value = "";
+        els.nameInput.focus();
+        if (roomId){
+            try { await saveRosterToRoom(); }
+            catch(e){ console.error(e); alert("Could not sync roster to room."); }
+        }
+    };
+
+    els.nameInput.addEventListener("keydown", (e)=> {
+        if (e.key === "Enter") els.addBtn.click();
+    });
+
+    els.clearBtn.onclick = async () => {
+        if (rosterLocked) return alert("Roster is locked. Unlock to clear.");
+        if (!confirm("Clear all names?")) return;
+        names = [];
+        presence = {};
+        groups = [];
+        renderRoster();
+        renderList(groups, "Cleared.");
+        renderBoard();
+        if (roomId){
+            try {
+                await saveRosterToRoom();
+                await saveGroupsToRoom();
+            } catch(e){
+                console.error(e);
+                alert("Could not sync clear to room.");
+            }
+        }
+    };
+
+    els.bulkAddBtn.onclick = async () => {
+        if (rosterLocked) return alert("Roster is locked. Unlock to edit.");
+        const lines = els.bulkInput.value.split("\n").map(norm).filter(Boolean);
+        lines.forEach(addNameLocal);
+        els.bulkInput.value = "";
+        if (roomId){
+            try { await saveRosterToRoom(); }
+            catch(e){ console.error(e); alert("Could not sync roster to room."); }
+        }
+    };
+
+    els.shuffleBtn.onclick = async () => {
+        if (rosterLocked) return alert("Roster is locked. Unlock to shuffle.");
+        names = fisherYates(names);
+        renderRoster();
+        if (roomId){
+            try { await saveRosterToRoom(); }
+            catch(e){ console.error(e); alert("Could not sync roster to room."); }
+        }
+    };
+
+    els.exportNamesBtn.onclick = async () => {
+        const text = names.join("\n");
+        await copyToClipboard(text, "Names copied ✅");
+    };
+
+    els.importBtn.onclick = async () => {
+        if (rosterLocked) return alert("Roster is locked. Unlock to import.");
+        const text = prompt("Paste names (one per line):");
+        if (!text) return;
+        text.split("\n").map(norm).filter(Boolean).forEach(addNameLocal);
+        if (roomId){
+            try { await saveRosterToRoom(); }
+            catch(e){ console.error(e); alert("Could not sync roster to room."); }
+        }
+    };
+
+    els.groupMode.addEventListener("change", syncMob);
+
+    els.generateBtn.onclick = async () => {
+        try { await generateAndSync(); }
+        catch(e){ console.error(e); alert("Could not sync groups to room."); }
+    };
+
+    els.rotateNowBtn.onclick = async () => {
+        try { await rotateNow(); }
+        catch(e){ console.error(e); alert("Rotate failed."); }
+    };
+
+    els.forceDailyBtn.onclick = async () => {
+        try { await dailyAutoRotate(true); }
+        catch(e){ console.error(e); alert("Daily rotate failed."); }
+    };
+
+    els.exportCsvBtn.onclick = exportCSV;
+    els.exportSlackBtn.onclick = exportSlack;
+
+    els.lockRosterBtn.onclick = () => setRosterLocked(true);
+    els.unlockRosterBtn.onclick = () => setRosterLocked(false);
+
+    els.markAllPresentBtn.onclick = async () => { try { await setAllPresence(true); } catch(e){ console.error(e); } };
+    els.markAllAbsentBtn.onclick = async () => { try { await setAllPresence(false); } catch(e){ console.error(e); } };
+
+    els.teacherNotes.addEventListener("input", () => {
+        if (window.__notesTimer) clearTimeout(window.__notesTimer);
+        window.__notesTimer = setTimeout(saveNotes, 350);
+    });
+
+    els.saveBoardBtn.onclick = async () => {
+        if (!groups.length) return alert("Generate groups first.");
+        if (roomId){
+            try { await saveGroupsToRoom(); alert("Board saved to room ✅"); }
+            catch(e){ console.error(e); alert("Could not save board to room."); }
+        } else {
+            alert("Join a room to save board to the cloud.");
+        }
+    };
+
+    els.resetBoardBtn.onclick = async () => {
+        if (!confirm("Reset to a fresh random grouping?")) return;
+        try { await generateAndSync(); }
+        catch(e){ console.error(e); alert("Reset failed."); }
+    };
+
+    // ======================================================
+    // Startup
+    // ======================================================
+    async function init(){
+        syncMob();
+
+        // Local teacher notes status
+        if (els.teacherNotes.value){
+            els.teacherNotesStatus.textContent = "Notes loaded ✅";
+        }
+
+        const urlRoom = getRoomFromUrl();
+        if (urlRoom){
+            els.roomInput.value = urlRoom;
+            try {
+                await joinRoom(urlRoom);
+            } catch(e){
+                console.error(e);
+                setRoomStatus("❌ Auto-join failed. Check Supabase keys & tables (and RLS).", "statusBad");
+            }
+        } else {
+            setRoomStatus('No room selected. Enter one like "bootcamp1" and click Join.', "statusWarn");
+            // keep UI usable offline until you join a room
+            renderRoster();
+            renderList(groups, "No room yet. Join a room to enable realtime collaboration.");
+            renderBoard();
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
