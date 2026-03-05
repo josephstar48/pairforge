@@ -366,7 +366,7 @@
 
             <div class="divider"></div>
 
-            <div class="sectionTitle">Teacher Dashboard</div>
+            <div class="sectionTitle">Instructor Dashboard</div>
             <div class="muted">Lock roster and write notes. (Notes stay on this device.)</div>
             <div class="row" style="margin-top:10px;">
                 <button class="btn" id="lockRosterBtn">🔒 Lock</button>
@@ -375,7 +375,7 @@
                 <button class="btn" id="markAllAbsentBtn">🚫 All Absent</button>
             </div>
 
-            <textarea id="teacherNotes" class="noteBox" placeholder="Teacher notes (optional)"></textarea>
+            <textarea id="teacherNotes" class="noteBox" placeholder="Instructor notes (optional)"></textarea>
             <div class="muted" id="teacherNotesStatus"></div>
         </div>
 
@@ -404,7 +404,7 @@
                     </div>
                     <div class="rightActions">
                         <button class="btn" id="saveBoardBtn">💾 Save Board</button>
-                        <button class="btn" id="resetBoardBtn">↩️ Reset</button>
+                        <button class="btn" id="resetBoardBtn">↩️ Generate or Reset</button>
                     </div>
                 </div>
 
@@ -500,7 +500,8 @@
     let names = [];
     let presence = {};
     let groups = [];
-    let weekSchedule = null; // { weekStart: 'YYYY-MM-DD', days: [{day:'Monday', pairs:[['A','B'],...]}] }
+    // weekSchedule now includes optional "solo" per day to show BYE when roster is odd
+    let weekSchedule = null; // { weekStart, days:[{day,pairs,solo}] }
 
     let rosterLocked = safeLoadJSON(STORAGE.LOCKED, false);
     els.teacherNotes.value = localStorage.getItem(STORAGE.NOTES) || "";
@@ -540,7 +541,7 @@
 
     function chunk(list, size){
         const out = [];
-        for (let i=0; i<list.length; i+=size) out.push(list.slice(i, i+size));
+        for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i+size));
         return out;
     }
 
@@ -672,7 +673,7 @@
         if (error) throw error;
     }
 
-    // ---- SCHEDULE (new) ----
+    // ---- SCHEDULE ----
     async function loadWeekSchedule(){
         if (!roomId) return;
         const ws = weekStartISO();
@@ -925,7 +926,7 @@
         els.mobSize.style.opacity = isMob ? "1" : ".6";
     }
 
-    // ---- Schedule UI ----
+    // ---- Schedule UI (NOW SHOWS BYE/SOLO) ----
     function renderWeekSchedule(){
         const ws = weekStartISO();
         els.weekMeta.textContent = roomId
@@ -965,6 +966,16 @@
                     line.textContent = `${p.join(" + ")}`;
                     dayCard.appendChild(line);
                 });
+            }
+
+            // NEW: show solo/BYE so nobody "disappears" on odd rosters
+            if (d.solo){
+                const soloLine = document.createElement("div");
+                soloLine.className = "pairLine";
+                // optional styling (remove if you want)
+                soloLine.style.color = "rgba(245,158,11,.92)";
+                soloLine.textContent = `SOLO: ${d.solo}`;
+                dayCard.appendChild(soloLine);
             }
 
             els.scheduleGrid.appendChild(dayCard);
@@ -1041,35 +1052,36 @@
     // ======================================================
     // Weekly round-robin scheduler (pairs)
     // ======================================================
-    // Classic "circle method" round robin:
-    // For N players (add BYE if odd), generate N-1 rounds of pairings.
+    // UPDATED:
+    // 1) Captures "solo" for BYE rounds so no one disappears.
+    // 2) Picks Mon–Fri rounds to avoid the same solo person repeating in the week (when possible).
     function roundRobinPairs(players){
         const list = [...players];
         if (list.length < 2) return [];
 
-        // If odd, add a BYE placeholder
         const BYE = "__BYE__";
         if (list.length % 2 === 1) list.push(BYE);
 
         const n = list.length;
         const rounds = [];
-
-        // We'll rotate all but the first element
         let arr = [...list];
 
         for (let r = 0; r < n - 1; r++){
             const pairs = [];
+            let solo = null;
+
             for (let i = 0; i < n / 2; i++){
                 const a = arr[i];
                 const b = arr[n - 1 - i];
-                if (a !== BYE && b !== BYE){
-                    pairs.push([a, b]);
-                }
-            }
-            rounds.push(pairs);
 
-            // rotate:
-            // keep arr[0] fixed, rotate the rest clockwise
+                if (a === BYE && b !== BYE) solo = b;
+                else if (b === BYE && a !== BYE) solo = a;
+                else if (a !== BYE && b !== BYE) pairs.push([a, b]);
+            }
+
+            rounds.push({ pairs, solo });
+
+            // rotate: keep arr[0] fixed, rotate the rest clockwise
             const fixed = arr[0];
             const rest = arr.slice(1);
             rest.unshift(rest.pop());
@@ -1079,6 +1091,36 @@
         return rounds;
     }
 
+    // NEW: choose 5 rounds for Mon–Fri trying to avoid repeating solo (BYE) person
+    function pickRoundsForWeek(rounds, dayCount = 5){
+        if (!rounds.length) return Array.from({ length: dayCount }, () => ({ pairs: [], solo: null }));
+
+        const picked = [];
+        const usedSolo = new Set();
+        let cursor = 0;
+
+        function findNextNonRepeating(startIdx){
+            for (let k = 0; k < rounds.length; k++){
+                const idx = (startIdx + k) % rounds.length;
+                const solo = rounds[idx].solo || null;
+                if (!solo) return idx; // even roster case
+                if (!usedSolo.has(solo)) return idx;
+            }
+            // not possible — allow repeats
+            return startIdx % rounds.length;
+        }
+
+        while (picked.length < dayCount){
+            const idx = findNextNonRepeating(cursor);
+            const chosen = rounds[idx];
+            picked.push(chosen);
+            if (chosen.solo) usedSolo.add(chosen.solo);
+            cursor = (idx + 1) % rounds.length;
+        }
+
+        return picked;
+    }
+
     function buildWeekScheduleFromRoster(){
         const roster = presentNames();
         if (roster.length < 2){
@@ -1086,15 +1128,17 @@
             return null;
         }
 
-        // We randomize the starting order once per schedule generation
+        // randomize once per schedule generation
         const seedOrder = fisherYates(roster);
 
         const rounds = roundRobinPairs(seedOrder);
 
-        // Map Mon–Fri to rounds. If fewer rounds than 5, wrap; if more, take first 5.
-        const days = WEEK_DAYS.map((dayName, idx) => {
-            const round = rounds.length ? rounds[idx % rounds.length] : [];
-            return { day: dayName, pairs: round };
+        // NEW: pick 5 rounds for Mon–Fri with minimal solo repeats
+        const weekRounds = pickRoundsForWeek(rounds, WEEK_DAYS.length);
+
+        const days = WEEK_DAYS.map((dayName, i) => {
+            const r = weekRounds[i] || { pairs: [], solo: null };
+            return { day: dayName, pairs: r.pairs || [], solo: r.solo || null };
         });
 
         return {
@@ -1157,6 +1201,12 @@
             } else {
                 d.pairs.forEach(p => lines.push(`  ${p.join(" + ")}`));
             }
+
+            // NEW: include BYE/SOLO line
+            if (d.solo){
+                lines.push(`  SOLO: ${d.solo}`);
+            }
+
             lines.push("");
         }
 
