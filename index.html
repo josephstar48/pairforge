@@ -23,16 +23,30 @@
             --warn: #f59e0b;
             --bad: #fb7185;
         }
-        *{ box-sizing:border-box; }
+
+        *{
+            box-sizing:border-box;
+            min-width:0;
+        }
+
+        html{
+            -webkit-text-size-adjust:100%;
+        }
+
         body{
             margin:0;
             font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
             color: var(--text);
-            background: var(--bg); /* removed gradients */
+            background: var(--bg);
             min-height:100vh;
-            padding:24px;
+            padding: clamp(12px, 2vw, 24px);
         }
-        .wrap{ max-width: 1100px; margin:0 auto; }
+
+        .wrap{
+            width:100%;
+            max-width:1100px;
+            margin:0 auto;
+        }
 
         header{
             display:flex;
@@ -42,41 +56,71 @@
             justify-content:space-between;
             flex-wrap:wrap;
         }
+
         .brand{
             display:flex;
             align-items:center;
             gap:12px;
-            min-width:280px;
+            min-width:0;
+            flex:1 1 260px;
         }
+
+        .brand img{
+            width: clamp(44px, 8vw, 60px);
+            height: clamp(44px, 8vw, 60px);
+            flex:0 0 auto;
+        }
+
         .brand h1{
             margin:0;
-            font-size: 28px;
-            letter-spacing: .2px;
+            font-size: clamp(22px, 4vw, 28px);
+            line-height:1.1;
+            letter-spacing:.2px;
+            word-break:break-word;
         }
+
         .subtitle{
             margin-top:4px;
             color: var(--muted);
-            font-size: 14px;
+            font-size:14px;
+            line-height:1.4;
         }
+
         .badge{
-            display:inline-flex; align-items:center; gap:8px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
             padding:10px 12px;
             border:1px solid var(--border);
             background: rgba(255,255,255,.06);
-            border-radius: 999px;
+            border-radius:999px;
             box-shadow: var(--shadow);
-            font-size: 13px;
+            font-size:13px;
             color: var(--muted);
-            white-space:nowrap;
+            white-space:normal;
+            text-align:center;
+            line-height:1.4;
+            max-width:100%;
+            overflow-wrap:anywhere;
+            word-break:break-word;
+            flex:1 1 100%;
         }
 
         .grid{
             display:grid;
-            grid-template-columns: 1fr;
+            grid-template-columns:1fr;
             gap:14px;
         }
+
         @media (min-width: 980px){
-            .grid{ grid-template-columns: 1.05fr .95fr; }
+            .grid{
+                grid-template-columns:minmax(0, 1.05fr) minmax(0, .95fr);
+            }
+
+            .badge{
+                flex:0 1 auto;
+                max-width:520px;
+            }
         }
 
         .card{
@@ -84,36 +128,61 @@
             border:1px solid var(--border);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            padding:16px;
+            padding: clamp(12px, 2vw, 16px);
             backdrop-filter: blur(10px);
+            overflow:hidden;
         }
 
-        .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .row{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            align-items:center;
+        }
+
+        .row > *{
+            min-width:0;
+        }
+
         input, textarea, select{
             width:100%;
+            max-width:100%;
             padding:12px 12px;
-            border-radius: 12px;
+            border-radius:12px;
             border:1px solid var(--border);
             background: rgba(10,14,28,.65);
             color: var(--text);
             outline:none;
+            font: inherit;
         }
-        textarea{ min-height: 120px; resize: vertical; }
-        input::placeholder, textarea::placeholder{ color: rgba(255,255,255,.45); }
+
+        textarea{
+            min-height:120px;
+            resize:vertical;
+        }
+
+        input::placeholder, textarea::placeholder{
+            color: rgba(255,255,255,.45);
+        }
 
         .btn{
             border:1px solid var(--border);
             background: rgba(255,255,255,.10);
             color: var(--text);
             padding:12px 14px;
-            border-radius: 12px;
+            border-radius:12px;
             cursor:pointer;
             transition: transform .05s ease, background .15s ease;
-            font-weight: 800;
+            font-weight:800;
             display:inline-flex;
             align-items:center;
+            justify-content:center;
             gap:8px;
+            text-align:center;
+            flex:1 1 160px;
+            min-height:44px;
         }
+
         .btn:hover{ background: rgba(255,255,255,.14); }
         .btn:active{ transform: translateY(1px); }
         .btn.primary{ background: rgba(96,165,250,.20); border-color: rgba(96,165,250,.35); }
@@ -121,48 +190,74 @@
         .btn.danger{ background: rgba(251,113,133,.14); border-color: rgba(251,113,133,.25); }
 
         .sectionTitle{
-            font-weight: 900;
+            font-weight:900;
             margin:0 0 10px;
             letter-spacing:.2px;
+            line-height:1.25;
         }
-        .muted{ color: var(--muted); font-size: 13px; }
-        .divider{ height:1px; background: rgba(255,255,255,.10); margin: 12px 0; }
+
+        .muted{
+            color: var(--muted);
+            font-size:13px;
+            line-height:1.45;
+        }
+
+        .divider{
+            height:1px;
+            background: rgba(255,255,255,.10);
+            margin:12px 0;
+        }
 
         .pill{
             display:inline-flex;
             align-items:center;
             gap:8px;
-            padding: 8px 10px;
-            border-radius: 999px;
+            padding:8px 10px;
+            border-radius:999px;
             border:1px solid var(--border);
             background: rgba(255,255,255,.06);
-            margin: 6px 8px 0 0;
-            font-size: 14px;
+            margin:6px 8px 0 0;
+            font-size:14px;
             user-select:none;
+            max-width:100%;
+            flex-wrap:wrap;
         }
+
         .pill button{
             border:none;
             background: transparent;
             color: rgba(255,255,255,.70);
             cursor:pointer;
-            font-size: 16px;
-            line-height: 1;
+            font-size:16px;
+            line-height:1;
         }
 
-        ul{ margin:10px 0 0 18px; }
-        li{ margin: 8px 0; }
+        ul{
+            margin:10px 0 0 18px;
+            padding-right:4px;
+        }
+
+        li{
+            margin:8px 0;
+            overflow-wrap:anywhere;
+        }
 
         .kpi{
-            display:flex; gap:10px; flex-wrap:wrap;
-            margin-top: 10px;
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-top:10px;
         }
+
         .kpi .chip{
             padding:8px 10px;
-            border-radius: 12px;
+            border-radius:12px;
             border:1px solid var(--border);
             background: rgba(255,255,255,.06);
-            font-size: 13px;
+            font-size:13px;
             color: var(--muted);
+            flex:1 1 180px;
+            text-align:center;
         }
 
         .board{
@@ -171,40 +266,56 @@
             gap:12px;
             margin-top:12px;
         }
+
         .group{
-            border: 1px solid var(--border);
+            border:1px solid var(--border);
             background: rgba(0,0,0,.12);
-            border-radius: 14px;
+            border-radius:14px;
             padding:12px;
             min-height:120px;
         }
+
         .groupHeader{
             display:flex;
             justify-content:space-between;
             align-items:center;
             gap:10px;
             margin-bottom:10px;
+            flex-wrap:wrap;
         }
+
         .groupTitle{
-            font-weight: 900;
-            font-size: 14px;
+            font-weight:900;
+            font-size:14px;
             letter-spacing:.2px;
         }
-        .dropHint{ font-size: 12px; color: var(--muted); }
+
+        .dropHint{
+            font-size:12px;
+            color: var(--muted);
+        }
+
         .person{
             background: rgba(96,165,250,.18);
-            border: 1px solid rgba(96,165,250,.30);
-            border-radius: 12px;
+            border:1px solid rgba(96,165,250,.30);
+            border-radius:12px;
             padding:10px 10px;
             margin:8px 0;
             display:flex;
             align-items:center;
             justify-content:space-between;
             gap:10px;
-            cursor: grab;
+            cursor:grab;
+            flex-wrap:wrap;
         }
-        .person:active{ cursor: grabbing; }
-        .person .name{ font-weight: 800; }
+
+        .person:active{ cursor:grabbing; }
+
+        .person .name{
+            font-weight:800;
+            overflow-wrap:anywhere;
+        }
+
         .presentToggle{
             display:flex;
             align-items:center;
@@ -212,66 +323,155 @@
             font-size:12px;
             color: var(--muted);
             user-select:none;
+            flex-wrap:wrap;
         }
-        .presentToggle input{ width:auto; margin:0; }
+
+        .presentToggle input{
+            width:auto;
+            margin:0;
+        }
+
         .noteBox{
             width:100%;
             margin-top:8px;
-            min-height: 70px;
-            resize: vertical;
+            min-height:70px;
+            resize:vertical;
         }
+
         .rightActions{
             display:flex;
             gap:10px;
             flex-wrap:wrap;
+            width:100%;
         }
 
         .statusOk{ color: rgba(34,197,94,.92); }
         .statusWarn{ color: rgba(245,158,11,.92); }
         .statusBad{ color: rgba(251,113,133,.95); }
-        code.k{ background: rgba(0,0,0,.25); padding:2px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.12); }
+
+        code.k{
+            background: rgba(0,0,0,.25);
+            padding:2px 6px;
+            border-radius:8px;
+            border:1px solid rgba(255,255,255,.12);
+            white-space:nowrap;
+        }
 
         .scheduleBox{
             border:1px solid var(--border);
-            border-radius: 14px;
+            border-radius:14px;
             padding:12px;
             background: rgba(0,0,0,.12);
-            margin-top: 10px;
+            margin-top:10px;
         }
+
         .scheduleGrid{
             display:grid;
-            grid-template-columns: 1fr;
+            grid-template-columns:1fr;
             gap:10px;
             margin-top:10px;
         }
-        @media (min-width: 980px){
-            .scheduleGrid{ grid-template-columns: 1fr 1fr; }
+
+        @media (min-width: 700px){
+            .scheduleGrid{
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
+
         .dayCard{
             border:1px solid rgba(255,255,255,.14);
             background: rgba(255,255,255,.06);
-            border-radius: 14px;
+            border-radius:14px;
             padding:12px;
         }
+
         .dayName{ font-weight:900; }
-        .pairLine{ margin-top:8px; color: rgba(255,255,255,.9); }
+
+        .pairLine{
+            margin-top:8px;
+            color: rgba(255,255,255,.9);
+            overflow-wrap:anywhere;
+        }
+
+        @media (max-width: 767px){
+            body{
+                padding:12px;
+            }
+
+            header{
+                align-items:flex-start;
+            }
+
+            .badge{
+                border-radius:16px;
+                width:100%;
+            }
+
+            .row > input,
+            .row > select,
+            .row > textarea,
+            .row > button,
+            .row > .btn{
+                flex:1 1 100%;
+                width:100%;
+            }
+
+            .board{
+                grid-template-columns:1fr;
+            }
+
+            .rightActions{
+                flex-direction:column;
+            }
+
+            .rightActions .btn{
+                width:100%;
+            }
+        }
+
+        @media (max-width: 479px){
+            .brand{
+                align-items:flex-start;
+            }
+
+            .brand h1{
+                font-size:22px;
+            }
+
+            .card{
+                border-radius:14px;
+            }
+
+            .btn{
+                padding:11px 12px;
+                font-size:14px;
+            }
+
+            .pill{
+                width:100%;
+                border-radius:14px;
+                justify-content:space-between;
+            }
+        }
     </style>
 </head>
 
 <body>
 <div class="wrap">
 
-    <header style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+    <header>
         <div class="brand">
             <img src="pairforge-logo.svg" width="60" height="60" alt="PairForge logo">
             <div>
                 <h1>PairForge</h1>
             </div>
         </div>
-        <div class="badge">Realtime Rooms · Pair/Mob/Team · Randomizer · Supabase Sync · Weekly Scheduler · Share</div>
+
+        <div class="badge">
+            Realtime Rooms · Pair/Mob/Team · Randomizer · Supabase Sync · Weekly Scheduler · Share
+        </div>
     </header>
 
-    <!-- ROOM BAR -->
     <div class="card" style="margin-bottom:14px;">
         <div class="sectionTitle" style="margin-bottom:6px;">Room</div>
         <div class="muted">Join the same room link on multiple devices to collaborate live.</div>
@@ -286,7 +486,6 @@
     </div>
 
     <div class="grid">
-        <!-- LEFT -->
         <div class="card">
             <div class="sectionTitle">1) Add names</div>
             <div class="muted">Roster changes sync to the room. Use Present/Absent to exclude someone from pairing.</div>
@@ -374,7 +573,6 @@
             <div class="muted" id="teacherNotesStatus"></div>
         </div>
 
-        <!-- RIGHT -->
         <div>
             <div class="card">
                 <div class="sectionTitle">Roster (<span id="count">0</span>)</div>
@@ -417,17 +615,11 @@
 </div>
 
 <script>
-    // ======================================================
-    // 0) Supabase Keys (Settings -> Data API / API Keys)
-    // ======================================================
     const SUPABASE_URL = "https://zngbgdpttaxwpcoiouer.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_uQSBmsgpROCduPskqUHB_Q_u02GLfd5";
 
     const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ======================================================
-    // Elements
-    // ======================================================
     const els = {
         roomInput: document.getElementById('roomInput'),
         joinRoomBtn: document.getElementById('joinRoomBtn'),
@@ -478,32 +670,22 @@
         scheduleGrid: document.getElementById('scheduleGrid'),
     };
 
-    // ======================================================
-    // Local-only storage (notes + lock)
-    // ======================================================
     const STORAGE = {
         NOTES: "pairforge_teacher_notes_v3",
         LOCKED: "pairforge_roster_locked_v3",
     };
 
-    // ======================================================
-    // State
-    // ======================================================
     let roomId = null;
     let realtimeChannel = null;
 
     let names = [];
     let presence = {};
     let groups = [];
-    // weekSchedule now includes optional "solo" per day to show BYE when roster is odd
-    let weekSchedule = null; // { weekStart, days:[{day,pairs,solo}] }
+    let weekSchedule = null;
 
     let rosterLocked = safeLoadJSON(STORAGE.LOCKED, false);
     els.teacherNotes.value = localStorage.getItem(STORAGE.NOTES) || "";
 
-    // ======================================================
-    // Helpers
-    // ======================================================
     function norm(s){ return (s || "").trim().replace(/\s+/g, " "); }
     function keyOfName(n){ return norm(n).toLowerCase(); }
 
@@ -523,8 +705,8 @@
 
     function fisherYates(arr){
         const a = [...arr];
-        for (let i=a.length-1; i>0; i--){
-            const j = Math.floor(Math.random()*(i+1));
+        for (let i = a.length - 1; i > 0; i--){
+            const j = Math.floor(Math.random() * (i + 1));
             [a[i], a[j]] = [a[j], a[i]];
         }
         return a;
@@ -536,7 +718,7 @@
 
     function chunk(list, size){
         const out = [];
-        for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i+size));
+        for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size));
         return out;
     }
 
@@ -558,32 +740,30 @@
         const url = new URL(window.location.href);
         return url.searchParams.get("room");
     }
+
     function setRoomInUrl(id){
         const url = new URL(window.location.href);
         url.searchParams.set("room", id);
         history.replaceState(null, "", url.toString());
     }
+
     function randomRoomId(){
-        return "room-" + Math.random().toString(36).slice(2,10);
+        return "room-" + Math.random().toString(36).slice(2, 10);
     }
 
-    // Week start (Monday) in local time
     function weekStartISO(date = new Date()){
         const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const day = d.getDay(); // 0 Sun..6 Sat
+        const day = d.getDay();
         const diffToMonday = (day === 0) ? -6 : (1 - day);
         d.setDate(d.getDate() + diffToMonday);
         const y = d.getFullYear();
-        const m = String(d.getMonth()+1).padStart(2,'0');
-        const dd = String(d.getDate()).padStart(2,'0');
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
         return `${y}-${m}-${dd}`;
     }
 
-    const WEEK_DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+    const WEEK_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
-    // ======================================================
-    // Supabase data
-    // ======================================================
     async function ensureRoom(id){
         const { data: found, error: findErr } = await supa
             .from("rooms")
@@ -616,7 +796,6 @@
         presence = {};
         (members || []).forEach(m => presence[keyOfName(m.display_name)] = !!m.present);
 
-        // today's groups
         const today = todayISO();
         const { data: grp, error: grpErr } = await supa
             .from("room_groups")
@@ -631,7 +810,6 @@
         renderList(groups, grp ? `Loaded today's groups (${today}) from room "${roomId}".` : `Room "${roomId}" loaded. No groups yet today.`);
         renderBoard();
 
-        // Load schedule for this week if exists
         await loadWeekSchedule();
     }
 
@@ -668,7 +846,6 @@
         if (error) throw error;
     }
 
-    // ---- SCHEDULE ----
     async function loadWeekSchedule(){
         if (!roomId) return;
         const ws = weekStartISO();
@@ -761,9 +938,6 @@
         await copyToClipboard(url.toString(), "Room link copied");
     }
 
-    // ======================================================
-    // UI rendering
-    // ======================================================
     function renderRoster(){
         els.names.innerHTML = "";
         els.count.textContent = names.length;
@@ -792,7 +966,7 @@
                 cbLabel.textContent = cb.checked ? "Present" : "Absent";
                 if (roomId){
                     try { await saveRosterToRoom(); }
-                    catch(e){ console.error(e); alert("Could not sync presence to room."); }
+                    catch (e){ console.error(e); alert("Could not sync presence to room."); }
                 }
             };
 
@@ -812,7 +986,7 @@
                 renderRoster();
                 if (roomId){
                     try { await saveRosterToRoom(); }
-                    catch(e){ console.error(e); alert("Could not sync roster to room."); }
+                    catch (e){ console.error(e); alert("Could not sync roster to room."); }
                 }
             };
 
@@ -826,7 +1000,7 @@
         els.resultMeta.textContent = meta || "";
         groupsArr.forEach((g, i) => {
             const li = document.createElement("li");
-            li.textContent = `Group ${i+1}: ${g.join(" + ")}`;
+            li.textContent = `Group ${i + 1}: ${g.join(" + ")}`;
             els.results.appendChild(li);
         });
     }
@@ -844,7 +1018,7 @@
 
             const title = document.createElement("div");
             title.className = "groupTitle";
-            title.textContent = `Group ${gi+1}`;
+            title.textContent = `Group ${gi + 1}`;
 
             const hint = document.createElement("div");
             hint.className = "dropHint";
@@ -859,7 +1033,10 @@
                 col.style.outline = "2px solid rgba(96,165,250,.45)";
                 col.style.outlineOffset = "2px";
             });
-            col.addEventListener("dragleave", () => { col.style.outline = "none"; });
+
+            col.addEventListener("dragleave", () => {
+                col.style.outline = "none";
+            });
 
             col.addEventListener("drop", async (e) => {
                 e.preventDefault();
@@ -882,7 +1059,7 @@
 
                 if (roomId){
                     try { await saveGroupsToRoom(); }
-                    catch(e){ console.error(e); alert("Could not sync board to room."); }
+                    catch (e){ console.error(e); alert("Could not sync board to room."); }
                 }
             });
 
@@ -921,7 +1098,6 @@
         els.mobSize.style.opacity = isMob ? "1" : ".6";
     }
 
-    // ---- Schedule UI (NOW SHOWS BYE/SOLO) ----
     function renderWeekSchedule(){
         const ws = weekStartISO();
         els.weekMeta.textContent = roomId
@@ -944,7 +1120,6 @@
             const dayName = document.createElement("div");
             dayName.className = "dayName";
             dayName.textContent = d.day;
-
             dayCard.appendChild(dayName);
 
             const pairs = d.pairs || [];
@@ -963,7 +1138,6 @@
                 });
             }
 
-            // show solo/BYE so nobody "disappears" on odd rosters
             if (d.solo){
                 const soloLine = document.createElement("div");
                 soloLine.className = "pairLine";
@@ -976,9 +1150,6 @@
         }
     }
 
-    // ======================================================
-    // Core features
-    // ======================================================
     function addNameLocal(name){
         const n = norm(name);
         if (!n) return;
@@ -1009,8 +1180,8 @@
 
         if (mode === "pairsPlusTrio"){
             let g = chunk(shuffled, 2);
-            if (g.length && g[g.length-1].length === 1 && g.length >= 2){
-                g[g.length-2].push(g[g.length-1][0]);
+            if (g.length && g[g.length - 1].length === 1 && g.length >= 2){
+                g[g.length - 2].push(g[g.length - 1][0]);
                 g.pop();
             }
             groups = g;
@@ -1025,14 +1196,13 @@
             if (size > 10) size = 10;
 
             groups = chunk(shuffled, size);
-            if (groups.length >= 2 && groups[groups.length-1].length === 1){
+            if (groups.length >= 2 && groups[groups.length - 1].length === 1){
                 const lone = groups.pop()[0];
                 groups[0].push(lone);
             }
 
             renderList(groups, `Mob mode: groups of ~${size}.`);
             renderBoard();
-            return;
         }
     }
 
@@ -1043,9 +1213,6 @@
         }
     }
 
-    // ======================================================
-    // Weekly round-robin scheduler (pairs)
-    // ======================================================
     function roundRobinPairs(players){
         const list = [...players];
         if (list.length < 2) return [];
@@ -1072,7 +1239,6 @@
 
             rounds.push({ pairs, solo });
 
-            // rotate: keep arr[0] fixed, rotate the rest clockwise
             const fixed = arr[0];
             const rest = arr.slice(1);
             rest.unshift(rest.pop());
@@ -1093,7 +1259,7 @@
             for (let k = 0; k < rounds.length; k++){
                 const idx = (startIdx + k) % rounds.length;
                 const solo = rounds[idx].solo || null;
-                if (!solo) return idx; // even roster case
+                if (!solo) return idx;
                 if (!usedSolo.has(solo)) return idx;
             }
             return startIdx % rounds.length;
@@ -1197,13 +1363,10 @@
         await copyToClipboard(lines.join("\n"), "Schedule copied");
     }
 
-    // ======================================================
-    // Exports + Teacher
-    // ======================================================
     function exportCSV(){
         if (!groups.length) return alert("Generate groups first.");
         const lines = [];
-        groups.forEach((g, i) => lines.push(`Group ${i+1},${g.map(x => `"${x.replaceAll('"','""')}"`).join(",")}`));
+        groups.forEach((g, i) => lines.push(`Group ${i + 1},${g.map(x => `"${x.replaceAll('"', '""')}"`).join(",")}`));
         const csv = lines.join("\n");
         const blob = new Blob([csv], { type: "text/csv" });
         const a = document.createElement("a");
@@ -1219,7 +1382,7 @@
         const msg = [
             `*PairForge Groups - ${today}*`,
             roomId ? `_Room:_ *${roomId}*` : "",
-            ...groups.map((g,i)=> `• *Group ${i+1}:* ${g.join(" + ")}`)
+            ...groups.map((g, i) => `• *Group ${i + 1}:* ${g.join(" + ")}`)
         ].filter(Boolean).join("\n");
 
         await copyToClipboard(msg, "Slack message copied");
@@ -1244,9 +1407,6 @@
         els.teacherNotesStatus.textContent = `Saved ${new Date().toLocaleString()}`;
     }
 
-    // ======================================================
-    // Events
-    // ======================================================
     els.joinRoomBtn.onclick = async () => {
         try {
             await joinRoom(els.roomInput.value);
@@ -1269,7 +1429,7 @@
     els.copyRoomLinkBtn.onclick = copyRoomLink;
     els.pushLocalBtn.onclick = async () => {
         try { await pushLocalToRoom(); }
-        catch(e){ console.error(e); alert("Could not push local roster to room."); }
+        catch (e){ console.error(e); alert("Could not push local roster to room."); }
     };
 
     els.addBtn.onclick = async () => {
@@ -1279,11 +1439,11 @@
         els.nameInput.focus();
         if (roomId){
             try { await saveRosterToRoom(); }
-            catch(e){ console.error(e); alert("Could not sync roster to room."); }
+            catch (e){ console.error(e); alert("Could not sync roster to room."); }
         }
     };
 
-    els.nameInput.addEventListener("keydown", (e)=> {
+    els.nameInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") els.addBtn.click();
     });
 
@@ -1302,7 +1462,7 @@
             try {
                 await saveRosterToRoom();
                 await saveGroupsToRoom();
-            } catch(e){
+            } catch (e){
                 console.error(e);
                 alert("Could not sync clear to room.");
             }
@@ -1316,7 +1476,7 @@
         els.bulkInput.value = "";
         if (roomId){
             try { await saveRosterToRoom(); }
-            catch(e){ console.error(e); alert("Could not sync roster to room."); }
+            catch (e){ console.error(e); alert("Could not sync roster to room."); }
         }
     };
 
@@ -1326,7 +1486,7 @@
         renderRoster();
         if (roomId){
             try { await saveRosterToRoom(); }
-            catch(e){ console.error(e); alert("Could not sync roster to room."); }
+            catch (e){ console.error(e); alert("Could not sync roster to room."); }
         }
     };
 
@@ -1342,7 +1502,7 @@
         text.split("\n").map(norm).filter(Boolean).forEach(addNameLocal);
         if (roomId){
             try { await saveRosterToRoom(); }
-            catch(e){ console.error(e); alert("Could not sync roster to room."); }
+            catch (e){ console.error(e); alert("Could not sync roster to room."); }
         }
     };
 
@@ -1350,24 +1510,24 @@
 
     els.generateBtn.onclick = async () => {
         try { await generateAndSync(); }
-        catch(e){ console.error(e); alert("Could not sync groups to room."); }
+        catch (e){ console.error(e); alert("Could not sync groups to room."); }
     };
 
     els.rotateNowBtn.onclick = async () => {
         try { await generateAndSync(); }
-        catch(e){ console.error(e); alert("Rotate failed."); }
+        catch (e){ console.error(e); alert("Rotate failed."); }
     };
 
     els.genWeekBtn.onclick = async () => {
         try { await generateWeekSchedule(); }
-        catch(e){ console.error(e); alert("Weekly schedule failed. Ensure room_schedules table exists and Realtime is enabled."); }
+        catch (e){ console.error(e); alert("Weekly schedule failed. Ensure room_schedules table exists and Realtime is enabled."); }
     };
 
     els.copyWeekBtn.onclick = copyWeekSchedule;
 
     els.autoWeekBtn.onclick = async () => {
         try { await autoGenerateWeekIfMissing(); }
-        catch(e){ console.error(e); alert("Auto schedule failed. Ensure room_schedules exists and RLS policies allow read/write."); }
+        catch (e){ console.error(e); alert("Auto schedule failed. Ensure room_schedules exists and RLS policies allow read/write."); }
     };
 
     els.exportCsvBtn.onclick = exportCSV;
@@ -1376,8 +1536,8 @@
     els.lockRosterBtn.onclick = () => setRosterLocked(true);
     els.unlockRosterBtn.onclick = () => setRosterLocked(false);
 
-    els.markAllPresentBtn.onclick = async () => { try { await setAllPresence(true); } catch(e){ console.error(e); } };
-    els.markAllAbsentBtn.onclick = async () => { try { await setAllPresence(false); } catch(e){ console.error(e); } };
+    els.markAllPresentBtn.onclick = async () => { try { await setAllPresence(true); } catch (e){ console.error(e); } };
+    els.markAllAbsentBtn.onclick = async () => { try { await setAllPresence(false); } catch (e){ console.error(e); } };
 
     els.teacherNotes.addEventListener("input", () => {
         if (window.__notesTimer) clearTimeout(window.__notesTimer);
@@ -1388,7 +1548,7 @@
         if (!groups.length) return alert("Generate groups first.");
         if (roomId){
             try { await saveGroupsToRoom(); alert("Board saved to room."); }
-            catch(e){ console.error(e); alert("Could not save board to room."); }
+            catch (e){ console.error(e); alert("Could not save board to room."); }
         } else {
             alert("Join a room to save board to the cloud.");
         }
@@ -1397,12 +1557,9 @@
     els.resetBoardBtn.onclick = async () => {
         if (!confirm("Reset to a fresh random grouping?")) return;
         try { await generateAndSync(); }
-        catch(e){ console.error(e); alert("Reset failed."); }
+        catch (e){ console.error(e); alert("Reset failed."); }
     };
 
-    // ======================================================
-    // Startup
-    // ======================================================
     async function init(){
         syncMob();
 
@@ -1415,7 +1572,7 @@
             els.roomInput.value = urlRoom;
             try {
                 await joinRoom(urlRoom);
-            } catch(e){
+            } catch (e){
                 console.error(e);
                 setRoomStatus("Auto-join failed. Check Supabase keys & tables (and RLS).", "statusBad");
             }
