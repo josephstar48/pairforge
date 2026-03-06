@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <title>PairForge — Rooms + Realtime</title>
+    <title>PairForge - Rooms + Realtime</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root{
-            --bg1:#0b1020;
-            --bg2:#111a33;
+            --bg: #0b1020;
             --card: rgba(255,255,255,.08);
             --border: rgba(255,255,255,.14);
             --text: rgba(255,255,255,.92);
@@ -29,10 +28,7 @@
             margin:0;
             font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
             color: var(--text);
-            background:
-                    radial-gradient(1200px 700px at 15% 15%, #23306b 0%, transparent 55%),
-                    radial-gradient(900px 600px at 85% 20%, #6b2a6d 0%, transparent 55%),
-                    linear-gradient(180deg, var(--bg1), var(--bg2));
+            background: var(--bg); /* removed gradients */
             min-height:100vh;
             padding:24px;
         }
@@ -273,7 +269,7 @@
                 <div class="subtitle">Rooms + realtime pair/mob randomizer + weekly scheduler. Share <code class="k">?room=bootcamp1</code></div>
             </div>
         </div>
-        <div class="badge">⚡ Realtime Rooms • Supabase • Scheduler</div>
+        <div class="badge">Realtime Rooms · Supabase · Scheduler</div>
     </header>
 
     <!-- ROOM BAR -->
@@ -282,10 +278,10 @@
         <div class="muted">Join the same room link on multiple devices to collaborate live.</div>
         <div class="row" style="margin-top:10px;">
             <input id="roomInput" placeholder="e.g., bootcamp1" />
-            <button class="btn" id="joinRoomBtn">🚪 Join</button>
-            <button class="btn" id="newRoomBtn">✨ New</button>
-            <button class="btn" id="copyRoomLinkBtn">🔗 Copy Room Link</button>
-            <button class="btn" id="pushLocalBtn" title="Push your local roster to the room (overwrites room members)">⬆️ Push Local → Room</button>
+            <button class="btn" id="joinRoomBtn">Join</button>
+            <button class="btn" id="newRoomBtn">New</button>
+            <button class="btn" id="copyRoomLinkBtn">Copy Room Link</button>
+            <button class="btn" id="pushLocalBtn" title="Push your local roster to the room (overwrites room members)">Push Local to Room</button>
         </div>
         <div class="muted" id="roomStatus" style="margin-top:8px;"></div>
     </div>
@@ -298,8 +294,8 @@
 
             <div class="row" style="margin-top:10px;">
                 <input id="nameInput" placeholder="Type a name (e.g., Alice)" />
-                <button class="btn" id="addBtn">➕ Add</button>
-                <button class="btn danger" id="clearBtn" title="Remove all names">🧹 Clear</button>
+                <button class="btn" id="addBtn">Add</button>
+                <button class="btn danger" id="clearBtn" title="Remove all names">Clear</button>
             </div>
 
             <div class="divider"></div>
@@ -311,7 +307,7 @@
                     <select id="groupMode">
                         <option value="pairsOnly">Pairs only (leave 1 solo if odd)</option>
                         <option value="pairsPlusTrio" selected>Pairs + Trio (odd gets added to make a trio)</option>
-                        <option value="mobSize">Mob groups of size…</option>
+                        <option value="mobSize">Mob groups of size...</option>
                     </select>
                 </div>
 
@@ -322,9 +318,9 @@
             </div>
 
             <div class="kpi">
-                <div class="chip">🔴 Realtime rooms</div>
-                <div class="chip">🗓️ Week scheduler (pairs)</div>
-                <div class="chip">🧲 Drag & drop board</div>
+                <div class="chip">Realtime rooms</div>
+                <div class="chip">Week scheduler (pairs)</div>
+                <div class="chip">Drag and drop board</div>
             </div>
 
             <div class="divider"></div>
@@ -332,27 +328,27 @@
             <div class="muted">Quick add (one name per line):</div>
             <textarea id="bulkInput" placeholder="Alice&#10;Bob&#10;Charlie&#10;Dana"></textarea>
             <div class="row" style="margin-top:10px;">
-                <button class="btn" id="bulkAddBtn">📥 Add Lines</button>
-                <button class="btn" id="shuffleBtn">🔀 Shuffle</button>
-                <button class="btn" id="exportNamesBtn">📋 Copy Names</button>
-                <button class="btn" id="importBtn">📌 Import</button>
+                <button class="btn" id="bulkAddBtn">Add Lines</button>
+                <button class="btn" id="shuffleBtn">Shuffle</button>
+                <button class="btn" id="exportNamesBtn">Copy Names</button>
+                <button class="btn" id="importBtn">Import</button>
             </div>
 
             <div class="divider"></div>
 
             <div class="row">
-                <button class="btn primary" id="generateBtn">🎯 Generate</button>
-                <button class="btn" id="rotateNowBtn">🔁 Rotate Now</button>
+                <button class="btn primary" id="generateBtn">Generate</button>
+                <button class="btn" id="rotateNowBtn">Rotate Now</button>
             </div>
 
             <div class="divider"></div>
 
             <div class="sectionTitle">Weekly Pair Scheduler</div>
-            <div class="muted">Creates Mon–Fri rotation using a fair round-robin algorithm (pairs mode). Syncs to the room.</div>
+            <div class="muted">Creates Mon-Fri rotation using a fair round-robin algorithm (pairs mode). Syncs to the room.</div>
             <div class="row" style="margin-top:10px;">
-                <button class="btn primary" id="genWeekBtn">🗓️ Generate Week Schedule</button>
-                <button class="btn" id="copyWeekBtn">📋 Copy Schedule</button>
-                <button class="btn" id="autoWeekBtn" title="Auto-generate schedule if missing for this week">✨ Auto if Missing</button>
+                <button class="btn primary" id="genWeekBtn">Generate Week Schedule</button>
+                <button class="btn" id="copyWeekBtn">Copy Schedule</button>
+                <button class="btn" id="autoWeekBtn" title="Auto-generate schedule if missing for this week">Auto if Missing</button>
             </div>
             <div class="muted" id="weekMeta" style="margin-top:8px;"></div>
 
@@ -360,8 +356,8 @@
 
             <div class="sectionTitle">Export</div>
             <div class="row">
-                <button class="btn" id="exportCsvBtn">⬇️ CSV</button>
-                <button class="btn" id="exportSlackBtn">💬 Slack Message</button>
+                <button class="btn" id="exportCsvBtn">CSV</button>
+                <button class="btn" id="exportSlackBtn">Slack Message</button>
             </div>
 
             <div class="divider"></div>
@@ -369,10 +365,10 @@
             <div class="sectionTitle">Instructor Dashboard</div>
             <div class="muted">Lock roster and write notes. (Notes stay on this device.)</div>
             <div class="row" style="margin-top:10px;">
-                <button class="btn" id="lockRosterBtn">🔒 Lock</button>
-                <button class="btn" id="unlockRosterBtn">🔓 Unlock</button>
-                <button class="btn" id="markAllPresentBtn">✅ All Present</button>
-                <button class="btn" id="markAllAbsentBtn">🚫 All Absent</button>
+                <button class="btn" id="lockRosterBtn">Lock</button>
+                <button class="btn" id="unlockRosterBtn">Unlock</button>
+                <button class="btn" id="markAllPresentBtn">All Present</button>
+                <button class="btn" id="markAllAbsentBtn">All Absent</button>
             </div>
 
             <textarea id="teacherNotes" class="noteBox" placeholder="Instructor notes (optional)"></textarea>
@@ -388,7 +384,7 @@
             </div>
 
             <div class="card" style="margin-top:14px;">
-                <div class="sectionTitle">Weekly Schedule (Mon–Fri)</div>
+                <div class="sectionTitle">Weekly Schedule (Mon-Fri)</div>
                 <div class="muted">This is what bootcamps want: predictable rotation everyone can see.</div>
                 <div class="scheduleBox">
                     <div class="muted" id="scheduleStatus">No schedule yet for this week.</div>
@@ -403,8 +399,8 @@
                         <div class="muted" id="resultMeta">No groups generated yet.</div>
                     </div>
                     <div class="rightActions">
-                        <button class="btn" id="saveBoardBtn">💾 Save Board</button>
-                        <button class="btn" id="resetBoardBtn">↩️ Generate or Reset</button>
+                        <button class="btn" id="saveBoardBtn">Save Board</button>
+                        <button class="btn" id="resetBoardBtn">Generate or Reset</button>
                     </div>
                 </div>
 
@@ -423,7 +419,7 @@
 
 <script>
     // ======================================================
-    // 0) Supabase Keys (Settings → Data API / API Keys)
+    // 0) Supabase Keys (Settings -> Data API / API Keys)
     // ======================================================
     const SUPABASE_URL = "https://zngbgdpttaxwpcoiouer.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_uQSBmsgpROCduPskqUHB_Q_u02GLfd5";
@@ -548,7 +544,7 @@
     async function copyToClipboard(text, okMsg){
         try {
             await navigator.clipboard.writeText(text);
-            alert(okMsg || "Copied ✅");
+            alert(okMsg || "Copied");
         } catch {
             prompt("Copy this:", text);
         }
@@ -735,13 +731,13 @@
         els.roomInput.value = roomId;
         setRoomInUrl(roomId);
 
-        setRoomStatus("Joining room…", "");
+        setRoomStatus("Joining room...", "");
         await ensureRoom(roomId);
 
         await loadRoomState();
         await subscribeRealtime();
 
-        setRoomStatus(`✅ Joined room "${roomId}". Share the room link so others join.`, "statusOk");
+        setRoomStatus(`Joined room "${roomId}". Share the room link so others join.`, "statusOk");
     }
 
     async function pushLocalToRoom(){
@@ -756,14 +752,14 @@
         });
 
         await saveRosterToRoom();
-        setRoomStatus("⬆️ Local roster pushed to room ✅", "statusOk");
+        setRoomStatus("Local roster pushed to room.", "statusOk");
     }
 
     async function copyRoomLink(){
         if (!roomId) return alert("Join a room first.");
         const url = new URL(window.location.href);
         url.searchParams.set("room", roomId);
-        await copyToClipboard(url.toString(), "Room link copied ✅");
+        await copyToClipboard(url.toString(), "Room link copied");
     }
 
     // ======================================================
@@ -940,7 +936,7 @@
             return;
         }
 
-        els.scheduleStatus.textContent = `✅ Schedule loaded for week starting ${ws}.`;
+        els.scheduleStatus.textContent = `Schedule loaded for week starting ${ws}.`;
 
         for (const d of weekSchedule.days){
             const dayCard = document.createElement("div");
@@ -968,11 +964,10 @@
                 });
             }
 
-            // NEW: show solo/BYE so nobody "disappears" on odd rosters
+            // show solo/BYE so nobody "disappears" on odd rosters
             if (d.solo){
                 const soloLine = document.createElement("div");
                 soloLine.className = "pairLine";
-                // optional styling (remove if you want)
                 soloLine.style.color = "rgba(245,158,11,.92)";
                 soloLine.textContent = `SOLO: ${d.solo}`;
                 dayCard.appendChild(soloLine);
@@ -1052,9 +1047,6 @@
     // ======================================================
     // Weekly round-robin scheduler (pairs)
     // ======================================================
-    // UPDATED:
-    // 1) Captures "solo" for BYE rounds so no one disappears.
-    // 2) Picks Mon–Fri rounds to avoid the same solo person repeating in the week (when possible).
     function roundRobinPairs(players){
         const list = [...players];
         if (list.length < 2) return [];
@@ -1091,7 +1083,6 @@
         return rounds;
     }
 
-    // NEW: choose 5 rounds for Mon–Fri trying to avoid repeating solo (BYE) person
     function pickRoundsForWeek(rounds, dayCount = 5){
         if (!rounds.length) return Array.from({ length: dayCount }, () => ({ pairs: [], solo: null }));
 
@@ -1106,7 +1097,6 @@
                 if (!solo) return idx; // even roster case
                 if (!usedSolo.has(solo)) return idx;
             }
-            // not possible — allow repeats
             return startIdx % rounds.length;
         }
 
@@ -1128,12 +1118,8 @@
             return null;
         }
 
-        // randomize once per schedule generation
         const seedOrder = fisherYates(roster);
-
         const rounds = roundRobinPairs(seedOrder);
-
-        // NEW: pick 5 rounds for Mon–Fri with minimal solo repeats
         const weekRounds = pickRoundsForWeek(rounds, WEEK_DAYS.length);
 
         const days = WEEK_DAYS.map((dayName, i) => {
@@ -1162,7 +1148,7 @@
         }
 
         await saveWeekSchedule(sched);
-        alert("✅ Weekly schedule saved to the room.");
+        alert("Weekly schedule saved to the room.");
     }
 
     async function autoGenerateWeekIfMissing(){
@@ -1180,7 +1166,7 @@
         if (data?.schedule){
             weekSchedule = data.schedule;
             renderWeekSchedule();
-            alert("Schedule already exists for this week ✅");
+            alert("Schedule already exists for this week.");
             return;
         }
 
@@ -1191,7 +1177,7 @@
         if (!weekSchedule) return alert("No schedule yet. Generate the week schedule first.");
 
         const lines = [];
-        lines.push(`PairForge Weekly Schedule — week of ${weekSchedule.weekStart}${roomId ? ` — room: ${roomId}` : ""}`);
+        lines.push(`PairForge Weekly Schedule - week of ${weekSchedule.weekStart}${roomId ? ` - room: ${roomId}` : ""}`);
         lines.push("");
 
         for (const d of weekSchedule.days){
@@ -1202,7 +1188,6 @@
                 d.pairs.forEach(p => lines.push(`  ${p.join(" + ")}`));
             }
 
-            // NEW: include BYE/SOLO line
             if (d.solo){
                 lines.push(`  SOLO: ${d.solo}`);
             }
@@ -1210,7 +1195,7 @@
             lines.push("");
         }
 
-        await copyToClipboard(lines.join("\n"), "Schedule copied ✅");
+        await copyToClipboard(lines.join("\n"), "Schedule copied");
     }
 
     // ======================================================
@@ -1233,19 +1218,19 @@
         if (!groups.length) return alert("Generate groups first.");
         const today = todayISO();
         const msg = [
-            `*PairForge Groups — ${today}*`,
+            `*PairForge Groups - ${today}*`,
             roomId ? `_Room:_ *${roomId}*` : "",
             ...groups.map((g,i)=> `• *Group ${i+1}:* ${g.join(" + ")}`)
         ].filter(Boolean).join("\n");
 
-        await copyToClipboard(msg, "Slack message copied ✅");
+        await copyToClipboard(msg, "Slack message copied");
     }
 
     function setRosterLocked(val){
         rosterLocked = !!val;
         safeSaveJSON(STORAGE.LOCKED, rosterLocked);
         renderRoster();
-        alert(rosterLocked ? "Roster locked 🔒" : "Roster unlocked 🔓");
+        alert(rosterLocked ? "Roster locked" : "Roster unlocked");
     }
 
     async function setAllPresence(isPresent){
@@ -1268,7 +1253,7 @@
             await joinRoom(els.roomInput.value);
         } catch (e){
             console.error(e);
-            setRoomStatus("❌ Could not join room. Common causes: missing tables, wrong keys, or RLS blocking writes.", "statusBad");
+            setRoomStatus("Could not join room. Common causes: missing tables, wrong keys, or RLS blocking writes.", "statusBad");
             alert("Join failed. If you see an RLS error in console, tell me and I'll give you the exact policy.");
         }
     };
@@ -1348,7 +1333,7 @@
 
     els.exportNamesBtn.onclick = async () => {
         const text = names.join("\n");
-        await copyToClipboard(text, "Names copied ✅");
+        await copyToClipboard(text, "Names copied");
     };
 
     els.importBtn.onclick = async () => {
@@ -1403,7 +1388,7 @@
     els.saveBoardBtn.onclick = async () => {
         if (!groups.length) return alert("Generate groups first.");
         if (roomId){
-            try { await saveGroupsToRoom(); alert("Board saved to room ✅"); }
+            try { await saveGroupsToRoom(); alert("Board saved to room."); }
             catch(e){ console.error(e); alert("Could not save board to room."); }
         } else {
             alert("Join a room to save board to the cloud.");
@@ -1423,7 +1408,7 @@
         syncMob();
 
         if (els.teacherNotes.value){
-            els.teacherNotesStatus.textContent = "Notes loaded ✅";
+            els.teacherNotesStatus.textContent = "Notes loaded";
         }
 
         const urlRoom = getRoomFromUrl();
@@ -1433,7 +1418,7 @@
                 await joinRoom(urlRoom);
             } catch(e){
                 console.error(e);
-                setRoomStatus("❌ Auto-join failed. Check Supabase keys & tables (and RLS).", "statusBad");
+                setRoomStatus("Auto-join failed. Check Supabase keys & tables (and RLS).", "statusBad");
             }
         } else {
             setRoomStatus('No room selected. Enter one like "bootcamp1" and click Join.', "statusWarn");
